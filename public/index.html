@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopPobre - Principal</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
+        h1, h2, h3 { color: #333; }
+        h1 { border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { border-top: 1px solid #eee; padding-top: 20px; }
+        strong { color: #005a9c; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🛒 ShopPobre - Sistema de E-commerce 🛒</h1>
+    </header>
+
+    <main>
+        <section id="descricao">
+            <h2>Descrição Geral do Projeto</h2>
+            <p>
+                O <strong>ShopPobre</strong> é um sistema web de e-commerce desenvolvido com foco no backend. O sistema oferece autenticação segura com papéis distintos (Administrador e Cliente), gerenciamento de produtos, categorias, pedidos e pagamentos.
+            </p>
+            <p>
+                O objetivo é construir uma aplicação completa, modular e segura, abrangendo desde o levantamento de requisitos até a implementação, testes e documentação.
+            </p>
+        </section>
+
+        <hr>
+
+        <section id="perguntas">
+            <h2>Perguntas do Miniteste</h2>
+
+            <h2>1) Quais são as principais funcionalidades que seu o sistema deve oferecer para atender às necessidades dos usuários?</h2>
+            
+            <p>O sistema ShopPobre deve oferecer um conjunto de funcionalidades que atendam tanto o cliente quanto o administrador, garantindo uma experiência completa de compra e gestão.</p>
+
+            <h3>Para clientes:</h3>
+            <ul>
+                <li>Cadastro e autenticação segura via JWT.</li>
+                <li>Navegação e busca de produtos por nome, categoria e preço.</li>
+                <li>Adição e remoção de produtos no carrinho de compras.</li>
+                <li>Finalização de pedidos com cálculo automático de valores.</li>
+                <li>Simulação de pagamento e acompanhamento de status de pedido.</li>
+                <li>Visualização de histórico de compras.</li>
+                <li>Avaliação e feedback de produtos adquiridos.</li>
+            </ul>
+
+            <h3>Para administradores:</h3>
+            <ul>
+                <li>Painel administrativo com controle total de produtos, categorias e usuários.</li>
+                <li>CRUD de produtos, categorias e controle de estoque.</li>
+                <li>Acompanhamento de pedidos realizados e status de pagamentos.</li>
+                <li>Visualização de estatísticas básicas (vendas, usuários, produtos mais vendidos).</li>
+            </ul>
+
+            <h2>2) Quais características de qualidade (como desempenho, segurança, usabilidade ou escalabilidade) são importantes para o seu sistema desenvolvido?</h2>
+
+            <p>O ShopPobre prioriza características de qualidade que garantem desempenho, segurança, usabilidade e escalabilidade do sistema.</p>
+
+            <p><strong>Desempenho:</strong> Respostas da API em menos de 500ms, uso eficiente de consultas SQL e cache quando aplicável.</p>
+            <p><strong>Segurança:</strong> Autenticação JWT, senhas criptografadas com bcrypt, e controle de acesso baseado em papéis (ADMIN, CUSTOMER).</p>
+            <p><strong>Usabilidade:</strong> Rotas e respostas RESTful padronizadas, documentação clara via Swagger e interface intuitiva no frontend.</p>
+            <p><strong>Escalabilidade:</strong> Arquitetura modular (Controller, Service, Repository) e banco relacional normalizado para suportar crescimento.</p>
+            <p><strong>Confiabilidade:</strong> Transações atômicas e rollback automático em falhas de compra ou pagamento.</p>
+            <p><strong>Testabilidade:</strong> Testes unitários e de integração com Jest/Mocha e Chai, garantindo estabilidade do código.</p>
+            <p><strong>Manutenibilidade:</strong> Código organizado, padronizado com ESLint/Prettier, versionado no GitHub e documentado.</p>
+
+        </section>
+    </main>
+
+    <footer>
+        <p><small>Princípios de Desenvolvimento Web</small></p>
+    </footer>
+</body>
+</html>
