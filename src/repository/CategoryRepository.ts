@@ -1,25 +1,38 @@
-import { Category } from "../models/Category";
+import { Category, CategoryAttributes } from "../models/Category";
+import sequelize from "../config/database";
 
 export class CategoryRepository {
+
+    private categoryModel: typeof Category;
+
+    constructor(){
+        this.categoryModel = sequelize.model('Category');
+    }
     
 
-    async create(name: String){
-        const category = await Category.create({
-            name
-        })
+    async create(categoryData: Omit<CategoryAttributes, 'id'>){
+        const existingCategory = await this.categoryModel.findOne({
+            where: {
+                name: categoryData.name,
+            },
+        });
 
-        return category;
+        if(existingCategory){
+            throw new Error('Category already exists');
+        }
+
+        return await Category.create(categoryData)
     }
 
-    async getCategoryById(id: number){
-        const category = await Category.findById({
-            id
-        })
-
-        return category;
+    async findById(id: number): Promise<Category | null>{
+        return await Category.findByPk(id)
     }
 
     async getAllCategories(){
         return await Category.findAll();
+    }
+
+    async update(id: number, categoryData: Partial<Category>){
+        
     }
 }
