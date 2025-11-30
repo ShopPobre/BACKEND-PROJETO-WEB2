@@ -11,8 +11,8 @@ export class UserController {
             return res.status(201).json(user);
          } catch (error: any) {
             return res.status(error.status || 500).json({
-            message: error.message,
-            errors: error.errors || null,
+                message: error.message,
+                errors: error.errors || null,
             });
         }
 
@@ -24,10 +24,24 @@ export class UserController {
             return res.status(201).json(users);
         } catch (error: any) {
             return res.status(error.status || 500).json({
-            message: error.message,
-            errors: error.errors || null,
+                message: error.message,
+                errors: error.errors || null,
             });
         }
+    }
+
+    static async getByCPF(req: Request, res: Response) {
+        try {
+            const { cpf } = req.params;
+            const users = await userService.getByCPF(cpf);
+            return res.status(201).json(users);
+        } catch (error: any) {
+            return res.status(error.status || 500).json({
+                message: error.message,
+                errors: error.errors || null,
+            });
+        }
+
     }
 
 }

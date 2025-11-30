@@ -13,6 +13,10 @@ app.listen(PORT, () => {
     console.log(`🚀 Servidor Express está rodando na porta ${PORT}`);
 });
 
-sequelize.sync({ alter: true })
+//sequelize.sync({ alter: true })
+    //.then(() => console.log("Tabelas sincronizadas"))
+    //.catch(err => console.error("Erro ao sincronizar:", err));
+
+sequelize.sync({ force: true })
     .then(() => console.log("Tabelas sincronizadas"))
     .catch(err => console.error("Erro ao sincronizar:", err));

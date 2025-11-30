@@ -6,6 +6,8 @@ export interface UserAttributes {
   name: string;
   email: string;
   password: string;
+  cpf: string;
+  telefone: string;
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
@@ -15,6 +17,9 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public name!: string;
   public email!: string;
   public password!: string; 
+  public cpf!: string;
+  public telefone!: string;
+
 
 }
 
@@ -36,6 +41,15 @@ User.init(
       unique: true, 
     },
     password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    cpf: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    telefone: {
       type: DataTypes.STRING,
       allowNull: false,
     },
