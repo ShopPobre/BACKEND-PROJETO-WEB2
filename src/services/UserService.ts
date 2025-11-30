@@ -2,6 +2,7 @@ import { plainToInstance } from "class-transformer";
 import { UserRequestDTO } from "../Dto/UserDTO/UserRequestDTO";
 import { UserRepository } from "../repository/UserRepository";
 import { validate } from "class-validator";
+import { NotFoundUsersException } from "../exceptions/NotFoundUsersException";
 
 const userRepository = new UserRepository(); 
 
@@ -36,5 +37,16 @@ export class UserService {
 
 
      }
+
+     async getAll() {
+        const users = await userRepository.getAllUsers();
+
+        if (!users || users.length === 0) {
+            throw new NotFoundUsersException("Nenhum usuário encontrado");
+        }
+
+        return users;
+    }
+
   
 }

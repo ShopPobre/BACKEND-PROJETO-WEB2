@@ -18,6 +18,18 @@ export class UserController {
 
     }
 
+    static async getAll(req: Request, res: Response){
+        try {
+            const users = await userService.getAll();
+            return res.status(201).json(users);
+        } catch (error: any) {
+            return res.status(error.status || 500).json({
+            message: error.message,
+            errors: error.errors || null,
+            });
+        }
+    }
+
 }
 
 

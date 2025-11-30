@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { UserController } from "../controllers/UserController";
+import { ROUTES } from "../constants/routes";
 
 
 const router = Router();
+const BASEURL = ROUTES.USER.BASE();
 
 
-router.post("/user", UserController.create)
+router.post(BASEURL, UserController.create)
+
+router.get(BASEURL, UserController.getAll)
 
 export default router;
