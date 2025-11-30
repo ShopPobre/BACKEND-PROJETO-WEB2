@@ -10,6 +10,7 @@ const BASEURL = ROUTES.USER.BASE();
 router.post(BASEURL, UserController.create)
 
 router.get(BASEURL, UserController.getAll)
-router.get(BASEURL + "/:cpf", UserController.getByCPF)
-
+router.get(BASEURL + "/:id", UserController.getByID)
+router.put(BASEURL + "/:id", UserController.update)
+router.delete(BASEURL + "/:id", UserController.delete)
 export default router;

@@ -1,3 +1,4 @@
+import { UserRequestDTO } from "../Dto/UserDTO/UserRequestDTO";
 import { User } from "../models/User";
 
 export class UserRepository {
@@ -28,6 +29,25 @@ export class UserRepository {
     const user = await User.findOne({ where: { cpf } });
     return user;
   }
+
+  async findByID(id: string){
+    const user = await User.findByPk(id);
+    return user;
+  }
+
+  async update(id: string, data: any) {
+    const user = await User.findByPk(id);
+    if (!user) return null;
+
+    await user.update(data);
+    return user;
+  }
+
+  async delete(id: string) {
+    const deleted = await User.destroy({ where: { id } });
+    return deleted > 0;
+  }
+
 
 
 }

@@ -10,22 +10,10 @@ const userRepository = new UserRepository();
 
 export class UserService {
 
-     async createUser(data: UserRequestDTO) {
+    async createUser(data: UserRequestDTO) {
 
         const dto = plainToInstance(UserRequestDTO, data);
-
-        const errors = await validate(dto);
-
-         if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}))
-            .flat();
-
-            const validationError: any = new Error("Erros de validação");
-            validationError.status = 400;
-            validationError.errors = errorMessages;
-            throw validationError;
-        }
+        this.errosValidacao(dto);
 
         const { name, email, password, cpf, telefone } = dto;
 
@@ -50,7 +38,7 @@ export class UserService {
         });
      }
 
-     async getAll() {
+    async getAll() {
         const users = await userRepository.getAllUsers();
 
         if (!users) {
@@ -66,8 +54,8 @@ export class UserService {
         );
     }
 
-    async getByCPF(cpf: string) {
-        const user = await userRepository.findByCPF(cpf);
+    async getByID(id: string) {
+        const user = await userRepository.findByID(id);
 
         if(!user){
             throw new NotFoundUserException("Nenhum usuário encontrado");
@@ -77,6 +65,48 @@ export class UserService {
         return plainToInstance(UserResponseDTO, plainUser, {
             excludeExtraneousValues: true,
         }); 
+    }
+
+    async update(id: string, data: UserRequestDTO){
+        const dto = plainToInstance(UserRequestDTO, data);
+        this.errosValidacao(dto);
+
+        const user = await userRepository.update(id, dto);
+
+        if(!user){
+           throw new NotFoundUserException("Nenhum usuário encontrado"); 
+        }
+
+        const plainUser = user.get({ plain: true });
+        return plainToInstance(UserResponseDTO, plainUser, {
+            excludeExtraneousValues: true,
+        }); 
+    }
+
+    async delete(id: string){
+
+        const user = userRepository.delete(id);
+
+        if(!user){
+             throw new NotFoundUserException("Nenhum usuário encontrado");
+        }
+
+        return { message: "Usuário deletado com sucesso" };
+    }
+
+    private async errosValidacao(dto: UserRequestDTO){
+        const errors = await validate(dto);
+
+        if (errors.length > 0) {
+            const errorMessages = errors
+            .map(err => Object.values(err.constraints || {}))
+            .flat();
+
+            const validationError: any = new Error("Erros de validação");
+            validationError.status = 400;
+            validationError.errors = errorMessages;
+            throw validationError;
+        }
     }
 
   
