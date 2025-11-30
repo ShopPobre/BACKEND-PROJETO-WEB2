@@ -10,7 +10,7 @@ export interface UserAttributes {
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
 
-class UserModel extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
   public id!: string;
   public name!: string;
   public email!: string;
@@ -18,7 +18,7 @@ class UserModel extends Model<UserAttributes, UserCreationAttributes> implements
 
 }
 
-UserModel.init(
+User.init(
   {
     id: {
       type: DataTypes.UUID, 
@@ -46,5 +46,3 @@ UserModel.init(
     timestamps: false, 
   }
 );
-
-export { UserModel };
