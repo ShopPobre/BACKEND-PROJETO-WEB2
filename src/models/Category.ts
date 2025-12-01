@@ -29,7 +29,7 @@ Category.init(
   },
   {
     sequelize,
-    tableName: "users",
+    tableName: "categories",
     timestamps: false
   }
 );

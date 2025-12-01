@@ -1,38 +1,44 @@
 import { Category, CategoryAttributes } from "../models/Category";
-import sequelize from "../config/database";
 
 export class CategoryRepository {
 
-    private categoryModel: typeof Category;
+    private categoryModel = Category;    
 
-    constructor(){
-        this.categoryModel = sequelize.model('Category');
+    async create(categoryData: Omit<CategoryAttributes, 'id'>) : Promise<Category>{
+        return await this.categoryModel.create(categoryData)
     }
-    
 
-    async create(categoryData: Omit<CategoryAttributes, 'id'>){
-        const existingCategory = await this.categoryModel.findOne({
-            where: {
-                name: categoryData.name,
-            },
+    async findByName(name: string): Promise<Category | null> {
+        return await Category.findOne({
+            where: { name }
         });
-
-        if(existingCategory){
-            throw new Error('Category already exists');
-        }
-
-        return await Category.create(categoryData)
     }
 
     async findById(id: number): Promise<Category | null>{
-        return await Category.findByPk(id)
+        return await this.categoryModel.findByPk(id)
     }
 
-    async getAllCategories(){
-        return await Category.findAll();
+    async getAllCategories() : Promise<Category[]> {
+        return await this.categoryModel.findAll();
     }
 
-    async update(id: number, categoryData: Partial<Category>){
-        
+    async update(id: number, categoryData: Partial<Category>) : Promise<Category | null> {
+        const category = await this.findById(id);
+
+        if (!category) {
+            return null;
+        }
+
+        await category.update(categoryData);
+
+        return await category.reload();
+    }
+
+    async delete(id: number): Promise<boolean> {
+        const deletedRows = await Category.destroy({
+            where: { id }
+        });
+
+        return deletedRows > 0;
     }
 }
