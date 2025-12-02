@@ -1,25 +1,25 @@
 import { Category } from "../models/Category";
 import { ICategoryRepository } from "../interfaces/ICategoryRepository";
 import { CreateCategoryDTO, UpdateCategoryDTO } from "../dto/CategoryDTO";
-import { NotFoundError, ConflictError } from "../errors/AppError";
+import { NotFoundError, ConflictError, ValidationError } from "../errors/AppError";
 import { CategoryValidator } from "../validators/categoryValidator";
 
 export class CategoryService {
     constructor(private categoryRepository: ICategoryRepository) {}
 
     async createCategory(data: CreateCategoryDTO): Promise<Category> {
-        CategoryValidator.validateCreate(data);
+        // Zod já faz trim e validação
+        const validatedData = CategoryValidator.validateCreate(data);
 
-        const trimmedName = data.name.trim();
-        const existing = await this.categoryRepository.findByName(trimmedName);
+        const existing = await this.categoryRepository.findByName(validatedData.name);
         
         if (existing) {
             throw new ConflictError('Categoria com este nome já existe');
         }
 
         return await this.categoryRepository.create({
-            name: trimmedName,
-            description: data.description?.trim() || null,
+            name: validatedData.name,
+            description: validatedData.description || null,
             isActive: true
         });
     }
@@ -41,7 +41,8 @@ export class CategoryService {
 
     async updateCategoryById(id: number, categoryData: UpdateCategoryDTO): Promise<Category> {
         const validatedId = CategoryValidator.validateId(id);
-        CategoryValidator.validateUpdate(categoryData);
+        // Zod já faz trim, validação e sanitização
+        const validatedData = CategoryValidator.validateUpdate(categoryData);
 
         const category = await this.categoryRepository.findById(validatedId);
         if (!category) {
@@ -50,25 +51,30 @@ export class CategoryService {
 
         const updateData: Partial<Category> = {};
 
-        if (categoryData.name !== undefined) {
-            const trimmedName = categoryData.name.trim();
-            
-            if (trimmedName !== category.name) {
-                const existingName = await this.categoryRepository.findByName(trimmedName);
+        if (validatedData.name !== undefined) {
+            // Verificar se o nome mudou antes de verificar duplicação
+            if (validatedData.name !== category.name) {
+                const existingName = await this.categoryRepository.findByName(validatedData.name);
                 if (existingName) {
                     throw new ConflictError('Categoria com este nome já existe');
                 }
             }
             
-            updateData.name = trimmedName;
+            updateData.name = validatedData.name;
         }
 
-        if (categoryData.description !== undefined) {
-            updateData.description = categoryData.description.trim() || null;
+        if (validatedData.description !== undefined) {
+            // Zod já valida e sanitiza (trim + null handling)
+            // Se for string vazia após trim, converte para null
+            if (validatedData.description === null) {
+                updateData.description = null;
+            } else if (typeof validatedData.description === 'string') {
+                updateData.description = validatedData.description || null;
+            }
         }
 
-        if (categoryData.isActive !== undefined) {
-            updateData.isActive = categoryData.isActive;
+        if (validatedData.isActive !== undefined) {
+            updateData.isActive = validatedData.isActive;
         }
 
         const updatedCategory = await this.categoryRepository.update(validatedId, updateData);

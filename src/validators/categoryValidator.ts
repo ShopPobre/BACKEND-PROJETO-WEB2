@@ -1,65 +1,48 @@
 import { CreateCategoryDTO, UpdateCategoryDTO } from "../dto/CategoryDTO";
-import { ValidationError } from "../errors/AppError";
+import {
+    createCategorySchema,
+    updateCategorySchema,
+    idParamSchema,
+    validateWithZod,
+    CreateCategoryInput,
+    UpdateCategoryInput
+} from "../schemas/categorySchema";
 
 export class CategoryValidator {
-    private static readonly MIN_NAME_LENGTH = 2;
-    private static readonly MAX_NAME_LENGTH = 100;
-    private static readonly MAX_DESCRIPTION_LENGTH = 500;
-
-    static validateCreate(data: CreateCategoryDTO): void {
-        if (!data.name || typeof data.name !== 'string') {
-            throw new ValidationError('Nome da categoria é obrigatório');
-        }
-
-        const trimmedName = data.name.trim();
-        
-        if (trimmedName.length < this.MIN_NAME_LENGTH) {
-            throw new ValidationError(`Nome deve ter pelo menos ${this.MIN_NAME_LENGTH} caracteres`);
-        }
-
-        if (trimmedName.length > this.MAX_NAME_LENGTH) {
-            throw new ValidationError(`Nome deve ter no máximo ${this.MAX_NAME_LENGTH} caracteres`);
-        }
-
-        if (data.description && data.description.length > this.MAX_DESCRIPTION_LENGTH) {
-            throw new ValidationError(`Descrição deve ter no máximo ${this.MAX_DESCRIPTION_LENGTH} caracteres`);
-        }
+    /**
+     * Valida dados de criação de categoria usando Zod
+     * @param data Dados a serem validados
+     * @returns Dados validados e sanitizados (com trim aplicado)
+     */
+    static validateCreate(data: unknown): CreateCategoryInput {
+        return validateWithZod(createCategorySchema, data);
     }
 
-    static validateUpdate(data: UpdateCategoryDTO): void {
-        if (data.name !== undefined) {
-            if (typeof data.name !== 'string' || !data.name.trim()) {
-                throw new ValidationError('Nome da categoria deve ser uma string não vazia');
-            }
-
-            const trimmedName = data.name.trim();
-            
-            if (trimmedName.length < this.MIN_NAME_LENGTH) {
-                throw new ValidationError(`Nome deve ter pelo menos ${this.MIN_NAME_LENGTH} caracteres`);
-            }
-
-            if (trimmedName.length > this.MAX_NAME_LENGTH) {
-                throw new ValidationError(`Nome deve ter no máximo ${this.MAX_NAME_LENGTH} caracteres`);
-            }
-        }
-
-        if (data.description !== undefined && data.description.length > this.MAX_DESCRIPTION_LENGTH) {
-            throw new ValidationError(`Descrição deve ter no máximo ${this.MAX_DESCRIPTION_LENGTH} caracteres`);
-        }
-
-        if (data.isActive !== undefined && typeof data.isActive !== 'boolean') {
-            throw new ValidationError('isActive deve ser um valor booleano');
-        }
+    /**
+     * Valida dados de atualização de categoria usando Zod
+     * @param data Dados a serem validados
+     * @returns Dados validados e sanitizados (com trim aplicado)
+     */
+    static validateUpdate(data: unknown): UpdateCategoryInput {
+        return validateWithZod(updateCategorySchema, data);
     }
 
-    static validateId(id: any): number {
-        const parsedId = parseInt(id, 10);
-        
-        if (isNaN(parsedId) || parsedId <= 0) {
-            throw new ValidationError('ID deve ser um número positivo válido');
+    /**
+     * Valida e converte ID de string para number
+     * @param id ID a ser validado (pode ser string ou number)
+     * @returns ID validado como number
+     */
+    static validateId(id: unknown): number {
+        // Se já for number, valida diretamente
+        if (typeof id === 'number') {
+            if (isNaN(id) || id <= 0) {
+                throw new Error('ID deve ser um número positivo válido');
+            }
+            return id;
         }
 
-        return parsedId;
+        // Se for string, usa o schema Zod
+        return validateWithZod(idParamSchema, String(id));
     }
 }
 
