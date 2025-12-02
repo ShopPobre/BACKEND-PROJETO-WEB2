@@ -1,61 +1,96 @@
 import { Category } from "../models/Category";
-import { CategoryRepository } from "../repository/CategoryRepository";
+import { ICategoryRepository } from "../interfaces/ICategoryRepository";
+import { CreateCategoryDTO, UpdateCategoryDTO } from "../dto/CategoryDTO";
+import { NotFoundError, ConflictError } from "../errors/AppError";
+import { CategoryValidator } from "../validators/categoryValidator";
 
-export class CategoryService{
+export class CategoryService {
+    constructor(private categoryRepository: ICategoryRepository) {}
 
-    constructor(private categoryRepository: CategoryRepository){}
+    async createCategory(data: CreateCategoryDTO): Promise<Category> {
+        CategoryValidator.validateCreate(data);
 
-    async createCategory(name : string): Promise<Category> {
-        if(!name){
-            throw new Error('O nome é obrigatório.')
-        }
-
-        const existing = await this.categoryRepository.findByName(name);
+        const trimmedName = data.name.trim();
+        const existing = await this.categoryRepository.findByName(trimmedName);
+        
         if (existing) {
-            throw new Error('Category already exists')
+            throw new ConflictError('Categoria com este nome já existe');
         }
 
-        return this.categoryRepository.create({ name });
+        return await this.categoryRepository.create({
+            name: trimmedName,
+            description: data.description?.trim() || null,
+            isActive: true
+        });
     }
 
-    async getCategories() : Promise<Category[]> {
-        return this.categoryRepository.getAllCategories();
+    async getCategories(): Promise<Category[]> {
+        return await this.categoryRepository.getAllCategories();
     }
 
-    async getCategoryById(id : number) : Promise<Category | null> {
-        if(!id){
-            throw new Error('ID é obrigatório');
+    async getCategoryById(id: number): Promise<Category> {
+        const validatedId = CategoryValidator.validateId(id);
+        const category = await this.categoryRepository.findById(validatedId);
+        
+        if (!category) {
+            throw new NotFoundError('Categoria não encontrada');
         }
-
-        const category = await this.categoryRepository.findById(id);
-        if (!category) throw new Error('Category not found');
 
         return category;
     }
 
-    async updateCategoryById(id: number, categoryData : Partial<Category>){
-        if(!id){
-            throw new Error('ID é obrigatório');
+    async updateCategoryById(id: number, categoryData: UpdateCategoryDTO): Promise<Category> {
+        const validatedId = CategoryValidator.validateId(id);
+        CategoryValidator.validateUpdate(categoryData);
+
+        const category = await this.categoryRepository.findById(validatedId);
+        if (!category) {
+            throw new NotFoundError('Categoria não encontrada');
         }
 
-        const category = await this.categoryRepository.findById(id);
-        if (!category) throw new Error('Category not found');
+        const updateData: Partial<Category> = {};
 
-        if (categoryData.name && categoryData.name !== category.name) {
+        if (categoryData.name !== undefined) {
+            const trimmedName = categoryData.name.trim();
             
-            const existingName = await this.categoryRepository.findByName(categoryData.name);
-            
-            if (existingName) {
-                throw new Error('Category name already currently in use');
+            if (trimmedName !== category.name) {
+                const existingName = await this.categoryRepository.findByName(trimmedName);
+                if (existingName) {
+                    throw new ConflictError('Categoria com este nome já existe');
+                }
             }
+            
+            updateData.name = trimmedName;
         }
 
-        const updatedCategory = this.categoryRepository.update(id, categoryData)
+        if (categoryData.description !== undefined) {
+            updateData.description = categoryData.description.trim() || null;
+        }
 
-        if(!updatedCategory){
-            throw new Error('Error updating category')
+        if (categoryData.isActive !== undefined) {
+            updateData.isActive = categoryData.isActive;
+        }
+
+        const updatedCategory = await this.categoryRepository.update(validatedId, updateData);
+
+        if (!updatedCategory) {
+            throw new NotFoundError('Erro ao atualizar categoria');
         }
 
         return updatedCategory;
+    }
+
+    async deleteCategory(id: number): Promise<void> {
+        const validatedId = CategoryValidator.validateId(id);
+        
+        const category = await this.categoryRepository.findById(validatedId);
+        if (!category) {
+            throw new NotFoundError('Categoria não encontrada');
+        }
+
+        const deleted = await this.categoryRepository.delete(validatedId);
+        if (!deleted) {
+            throw new NotFoundError('Erro ao deletar categoria');
+        }
     }
 }
