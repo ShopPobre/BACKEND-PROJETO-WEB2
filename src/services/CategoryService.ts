@@ -1,15 +1,20 @@
 import { Category } from "../models/Category";
 import { ICategoryRepository } from "../interfaces/ICategoryRepository";
 import { CreateCategoryDTO, UpdateCategoryDTO } from "../dto/CategoryDTO";
-import { NotFoundError, ConflictError, ValidationError } from "../errors/AppError";
-import { CategoryValidator } from "../validators/categoryValidator";
+import { NotFoundError, ConflictError } from "../errors/AppError";
+import {
+    createCategorySchema,
+    updateCategorySchema,
+    validateWithZod,
+    validateId
+} from "../schemas/categorySchema";
 
 export class CategoryService {
     constructor(private categoryRepository: ICategoryRepository) {}
 
     async createCategory(data: CreateCategoryDTO): Promise<Category> {
         // Zod já faz trim e validação
-        const validatedData = CategoryValidator.validateCreate(data);
+        const validatedData = validateWithZod(createCategorySchema, data);
 
         const existing = await this.categoryRepository.findByName(validatedData.name);
         
@@ -29,7 +34,7 @@ export class CategoryService {
     }
 
     async getCategoryById(id: number): Promise<Category> {
-        const validatedId = CategoryValidator.validateId(id);
+        const validatedId = validateId(id);
         const category = await this.categoryRepository.findById(validatedId);
         
         if (!category) {
@@ -40,9 +45,9 @@ export class CategoryService {
     }
 
     async updateCategoryById(id: number, categoryData: UpdateCategoryDTO): Promise<Category> {
-        const validatedId = CategoryValidator.validateId(id);
+        const validatedId = validateId(id);
         // Zod já faz trim, validação e sanitização
-        const validatedData = CategoryValidator.validateUpdate(categoryData);
+        const validatedData = validateWithZod(updateCategorySchema, categoryData);
 
         const category = await this.categoryRepository.findById(validatedId);
         if (!category) {
@@ -87,7 +92,7 @@ export class CategoryService {
     }
 
     async deleteCategory(id: number): Promise<void> {
-        const validatedId = CategoryValidator.validateId(id);
+        const validatedId = validateId(id);
         
         const category = await this.categoryRepository.findById(validatedId);
         if (!category) {

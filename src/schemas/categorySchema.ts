@@ -42,7 +42,7 @@ export const updateCategorySchema = z.object({
         .optional()
 });
 
-// Schema para validação de ID
+// Schema para validação de ID (string)
 export const idParamSchema = z
     .string()
     .refine(
@@ -55,6 +55,20 @@ export const idParamSchema = z
         }
     )
     .transform((val) => parseInt(val, 10));
+
+// Função helper para validar ID (pode ser string ou number)
+export function validateId(id: unknown): number {
+    // Se já for number, valida diretamente
+    if (typeof id === 'number') {
+        if (isNaN(id) || id <= 0) {
+            throw new ValidationError('ID deve ser um número positivo válido');
+        }
+        return id;
+    }
+
+    // Se for string, usa o schema Zod
+    return validateWithZod(idParamSchema, String(id));
+}
 
 // Função helper para formatar erros do Zod
 export function formatZodError(error: z.ZodError): string {
