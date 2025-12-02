@@ -13,7 +13,7 @@ export class UserService {
     async createUser(data: UserRequestDTO) {
 
         const dto = plainToInstance(UserRequestDTO, data);
-        this.errosValidacao(dto);
+        await this.errosValidacao(dto);
 
         const { name, email, password, cpf, telefone } = dto;
 
@@ -25,11 +25,11 @@ export class UserService {
         }
 
         const user = await userRepository.create(
-            name,
+            { name,
             email,
             password,
             cpf,
-            telefone
+            telefone}
         );
  
         const plainUser = user.get({ plain: true });
@@ -41,7 +41,7 @@ export class UserService {
     async getAll() {
         const users = await userRepository.getAllUsers();
 
-        if (!users) {
+        if (users.length == 0) {
             throw new NotFoundUserException("Nenhum usuário encontrado");
         }
 
@@ -69,6 +69,7 @@ export class UserService {
 
     async update(id: string, data: UserRequestDTO){
         const dto = plainToInstance(UserRequestDTO, data);
+
         this.errosValidacao(dto);
 
         const user = await userRepository.update(id, dto);
@@ -96,7 +97,7 @@ export class UserService {
 
     private async errosValidacao(dto: UserRequestDTO){
         const errors = await validate(dto);
-
+    
         if (errors.length > 0) {
             const errorMessages = errors
             .map(err => Object.values(err.constraints || {}))
@@ -108,6 +109,5 @@ export class UserService {
             throw validationError;
         }
     }
-
   
 }

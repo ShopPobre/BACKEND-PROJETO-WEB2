@@ -17,6 +17,7 @@ export class UserRequestDTO {
   @IsNotEmpty({ message: "O cpf é obrigatóriao." })
   public cpf!: string;
 
-   @IsPhoneNumber('BR', { message: "O telefone deve ser válido no formato brasileiro." })
-   public telefone!: string;
+  @IsPhoneNumber('BR', { message: "O telefone deve ser válido no formato brasileiro." })
+  public telefone!: string;
+
 }

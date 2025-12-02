@@ -10,10 +10,15 @@ export class UserController {
             const user = await userService.createUser(req.body);
             return res.status(201).json(user);
          } catch (error: any) {
-            return res.status(error.status || 500).json({
-                message: error.message,
-                errors: error.errors || null,
-            });
+            const response: any = {
+            message: error.message
+            };
+
+            if (error.errors) {
+                response.errors = error.errors;
+            }
+
+            return res.status(error.status || 500).json(response);
         }
 
     }
@@ -23,10 +28,15 @@ export class UserController {
             const users = await userService.getAll();
             return res.status(200).json(users);
         } catch (error: any) {
-            return res.status(error.status || 500).json({
-                message: error.message,
-                errors: error.errors || null,
-            });
+            const response: any = {
+            message: error.message
+            };
+
+            if (error.errors) {
+                response.errors = error.errors;
+            }
+
+            return res.status(error.status || 500).json(response);
         }
     }
 
@@ -36,10 +46,15 @@ export class UserController {
             const users = await userService.getByID(id);
             return res.status(200).json(users);
         } catch (error: any) {
-            return res.status(error.status || 500).json({
-                message: error.message,
-                errors: error.errors || null,
-            });
+            const response: any = {
+            message: error.message
+            };
+
+            if (error.errors) {
+            response.errors = error.errors;
+            }
+
+            return res.status(error.status || 500).json(response);
         }
     }
 
@@ -49,10 +64,15 @@ export class UserController {
             const users = await userService.update(id, req.body);
             return res.status(200).json(users);
         } catch (error: any) {
-            return res.status(error.status || 500).json({
-                message: error.message,
-                errors: error.errors || null,
-            });
+            const response: any = {
+            message: error.message
+            };
+
+            if (error.errors) {
+            response.errors = error.errors;
+            }
+
+            return res.status(error.status || 500).json(response);
         }
     }
 
@@ -61,11 +81,16 @@ export class UserController {
             const { id } = req.params;
             const result = await userService.delete(id);
             return res.status(200).json(result);
-        } catch (error: any) {
-            return res.status(error.status || 500).json({
-                message: error.message,
-                errors: error.errors || null,
-            });
+       } catch (error: any) {
+            const response: any = {
+            message: error.message
+            };
+
+            if (error.errors) {
+            response.errors = error.errors;
+            }
+
+            return res.status(error.status || 500).json(response);
         }
     }
 

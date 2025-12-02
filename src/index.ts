@@ -1,4 +1,4 @@
-// src/index.ts (Exemplo)
+import "reflect-metadata";
 import express from 'express';
 import userRouter from './routes/UserRouter';
 import sequelize from "./config/database";
