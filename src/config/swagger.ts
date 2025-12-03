@@ -119,6 +119,127 @@ const swaggerDefinition: SwaggerDefinition = {
                     }
                 }
             },
+            // Product Schemas
+            CreateProductDTO: {
+                type: "object",
+                required: ["name", "price", "categoryId"],
+                properties: {
+                    name: {
+                        type: "string",
+                        minLength: 2,
+                        maxLength: 200,
+                        example: "Notebook Dell",
+                        description: "Nome do produto (obrigatório, 2-200 caracteres)"
+                    },
+                    description: {
+                        type: "string",
+                        example: "Notebook com 8GB RAM e SSD 256GB",
+                        description: "Descrição do produto (opcional)"
+                    },
+                    price: {
+                        type: "number",
+                        format: "decimal",
+                        minimum: 0,
+                        maximum: 99999999.99,
+                        example: 2999.99,
+                        description: "Preço do produto (obrigatório, positivo, máximo 2 casas decimais)"
+                    },
+                    categoryId: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 1,
+                        description: "ID da categoria do produto (obrigatório)"
+                    }
+                }
+            },
+            UpdateProductDTO: {
+                type: "object",
+                properties: {
+                    name: {
+                        type: "string",
+                        minLength: 2,
+                        maxLength: 200,
+                        example: "Notebook Dell Atualizado",
+                        description: "Nome do produto (2-200 caracteres)"
+                    },
+                    description: {
+                        type: "string",
+                        nullable: true,
+                        example: "Nova descrição do produto",
+                        description: "Descrição do produto"
+                    },
+                    price: {
+                        type: "number",
+                        format: "decimal",
+                        minimum: 0,
+                        maximum: 99999999.99,
+                        example: 2799.99,
+                        description: "Preço do produto (positivo, máximo 2 casas decimais)"
+                    },
+                    categoryId: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 1,
+                        description: "ID da categoria do produto"
+                    },
+                    isActive: {
+                        type: "boolean",
+                        example: true,
+                        description: "Status ativo/inativo do produto"
+                    }
+                }
+            },
+            ProductResponseDTO: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "integer",
+                        example: 1,
+                        description: "ID único do produto"
+                    },
+                    name: {
+                        type: "string",
+                        example: "Notebook Dell",
+                        description: "Nome do produto"
+                    },
+                    description: {
+                        type: "string",
+                        nullable: true,
+                        example: "Notebook com 8GB RAM e SSD 256GB",
+                        description: "Descrição do produto"
+                    },
+                    price: {
+                        type: "number",
+                        format: "decimal",
+                        example: 2999.99,
+                        description: "Preço do produto"
+                    },
+                    categoryId: {
+                        type: "integer",
+                        example: 1,
+                        description: "ID da categoria do produto"
+                    },
+                    isActive: {
+                        type: "boolean",
+                        example: true,
+                        description: "Status ativo/inativo"
+                    },
+                    createdAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de criação"
+                    },
+                    updatedAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de atualização"
+                    }
+                }
+            },
             // Error Schemas
             Error: {
                 type: "object",
@@ -236,6 +357,10 @@ const swaggerDefinition: SwaggerDefinition = {
         {
             name: "Categories",
             description: "Operações relacionadas ao gerenciamento de categorias de produtos"
+        },
+        {
+            name: "Products",
+            description: "Operações relacionadas ao gerenciamento de produtos"
         },
         {
             name: "Authentication",

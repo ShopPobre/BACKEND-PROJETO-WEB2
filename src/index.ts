@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import categoryRoutes from "./routes/categoryRoutes";
+import productRoutes from "./routes/productRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
 
@@ -52,6 +53,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 // Routes
 app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
 
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
@@ -73,6 +75,7 @@ const startServer = async () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
+            console.log(`📍 Products API: http://localhost:${PORT}/api/products`);
             console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
         });
     } catch (error) {
