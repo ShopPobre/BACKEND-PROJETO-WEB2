@@ -3,46 +3,73 @@ import { User } from "../models/User";
 
 export class UserRepository implements IUserRepository {
 
-  private userModel = User;
-
   async create(userData: any) {
-    return await User.create(
+    try {
+      return await User.create(
       {
         ...userData
       }
-    );
+      );
+    } catch (error: any){
+      throw error;
+    }
+
   }
 
   async getAllUsers() {
-    return await User.findAll()
+    try {
+      return await User.findAll()
+    } catch (error: any){
+      throw error;
+    }
   }
 
   async findByEmail(email: string){
-    const user = await User.findOne({ where: { email } });
-    return user;
+    try {
+      const user = await User.findOne({ where: { email } });
+      return user;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
-  async findByCPF(cpf: string){
-    const user = await User.findOne({ where: { cpf } });
-    return user;
+  async findByCpf(cpf: string){
+    try {
+      const user = await User.findOne({ where: { cpf } });
+      return user;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
   async findByID(id: string){
-    const user = await User.findByPk(id);
-    return user;
+    try {
+      const user = await User.findByPk(id);
+      return user;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
   async update(id: string, data: any) {
-    const user = await User.findByPk(id);
-    if (!user) return null;
+    try {
+      const user = await User.findByPk(id);
+      if (!user) return null;
 
-    await user.update(data);
-    return user;
+      await user.update(data);
+      return user;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
   async delete(id: string) {
-    const deleted = await User.destroy({ where: { id } });
-    return deleted > 0;
+    try {
+      const deleted = await User.destroy({ where: { id } });
+      return deleted > 0;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
 

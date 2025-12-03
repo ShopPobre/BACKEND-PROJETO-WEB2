@@ -1,17 +1,13 @@
-import { UserRepository } from './../repository/UserRepository';
 import { ConflictError, NotFoundError } from './../errors/AppError';
 import { 
     createUpdateUserSchema,
+    validateID,
     validateWithZod
 } from './../schemas/userSchema';
 import { IUserRepository } from './../interfaces/IUserRepository';
-import { plainToInstance } from "class-transformer";
-import { UserRequestDTO } from "../Dto/UserDTO/UserRequestDTO";
-import { UserResponseDTO } from "../Dto/UserDTO/UserResponseDTO";
 import { UserRepository } from "../repository/UserRepository";
-import { validate } from "class-validator";
-import { NotFoundUserException } from "../exceptions/UserException/NotFoundUserException";
-import { UserAlreadyExistsException } from "../exceptions/UserException/UserAlreadyExistsException";
+import { UserRequestDTO } from '../dto/UserDTO/UserDTO';
+import { User } from '../models/User';
 
 const userRepository = new UserRepository(); 
 
@@ -23,13 +19,13 @@ export class UserService {
 
         const validateData = validateWithZod(createUpdateUserSchema, data);
         
-        let existing = await this.userRepository.findByCPF(validateData.cpf);
-        if (existing) {
+        const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
+        if (existingCPF) {
             throw new ConflictError('Usuario com este cpf já existe');
         }
 
-        existing = await this.userRepository.findByEmail(validateData.email);
-        if(existing){
+        const existingEmail = await this.userRepository.findByEmail(validateData.email);
+        if(existingEmail){
             throw new ConflictError('Usuario com este email já existe');
         }
 
@@ -54,8 +50,8 @@ export class UserService {
     }
 
     async getUserByID(id: string): Promise<User> {
-        const validateID = validateID(id);
-        const user = await userRepository.findByID(validateID);
+        const validateId = validateID(id);
+        const user = await userRepository.findByID(validateId);
 
         if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
@@ -65,29 +61,29 @@ export class UserService {
     }
 
     async updateUserByID(id: string, data: UserRequestDTO): Promise<User> {
-        const validateID = validateID(id);
+        const validateId = validateID(id);
         const validateData = validateWithZod(createUpdateUserSchema, data);
         
-        const user = await this.userRepository.findByID(validateID);
+        const user = await this.userRepository.findByID(validateId);
          if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        const existingCPF = await this.userRepository.findByCPF(validateData.cpf);
+        const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
         if(existingCPF){
-            if(existingCPF.id !== validateData.id) {
+            if(existingCPF.id !== validateId) {
                 throw new ConflictError('Usuario com este cpf já existe');
             }
         } 
 
-        const existingEmail = await this.userRepository.findByCPF(validateData.email);
+        const existingEmail = await this.userRepository.findByEmail(validateData.email);
         if(existingEmail){
-            if(existingEmail.id !== validateData.id) {
+            if(existingEmail.id !== validateId) {
                 throw new ConflictError('Usuario com este email já existe');
             }
         } 
 
-        const updateUser = await this.userRepository.update(validateID, validateData);
+        const updateUser = await this.userRepository.update(validateId, validateData);
 
         if(!updateUser) {
             throw new NotFoundError('Erro ao atualizar usuario');
@@ -98,20 +94,22 @@ export class UserService {
 
     }
 
-    async delete(id: string) {
+    async deleteUser(id: string) {
 
-        const validateID = validateID(id);
+        const validateId = validateID(id);
 
-        const user = await this.userRepository.findByID(validateID);
+        const user = await this.userRepository.findByID(validateId);
 
         if(!user){
              throw new NotFoundError('Nenhum usuário encontrado');
         }
 
-        const deleted = await this.userRepository.delete(validateID);
+        const deleted = await this.userRepository.delete(validateId);
         if(!deleted) {
             throw new NotFoundError('Erro ao deletar usuario');
         }
+
+        return { message: "Usuário deletado com sucesso" };
     }
   
 }

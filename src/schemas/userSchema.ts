@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ValidationError } from "../errors/AppError";
 
 export const idParamSchema = z.string().uuid({
     message: "ID deve ser um UUID válido"
@@ -56,4 +57,9 @@ export function validateWithZod<T>(schema: z.ZodSchema<T>, data: unknown): T {
         }
         throw error;
     }
+}
+
+export function formatZodError(error: z.ZodError): string {
+    const firstError = error.issues[0];
+    return firstError?.message || "Erro de validação";
 }

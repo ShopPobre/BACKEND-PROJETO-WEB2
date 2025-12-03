@@ -1,5 +1,4 @@
 import express, { Express } from "express";
-import swaggerUi from "swagger-ui-express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import userRoutes from "./routes/userRoutes";
@@ -47,14 +46,14 @@ const startServer = async () => {
 
         // Sincronizar modelos (apenas em desenvolvimento)
         if (process.env.NODE_ENV !== "production") {
-            await sequelize.sync({ alter: true });
+            await sequelize.sync({ force: true });
             console.log("✅ Modelos sincronizados com o banco de dados.");
         }
 
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
-            console.log(`📍 Users API: http://localhost:${PORT}/api/categories`);
+            console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
         });
     } catch (error) {
         console.error("❌ Erro ao iniciar servidor:", error);
