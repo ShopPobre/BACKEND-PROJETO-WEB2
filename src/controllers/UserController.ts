@@ -1,97 +1,48 @@
-import { UserService } from "../services/UserService"
+import { UserResponseDTO } from './../Dto/UserDTO/UserResponseDTO';
+import { UserMapper } from './../mappers/UserMapper';
+import { UserRequestDTO } from './../Dto/UserDTO/UserRequestDTO';
+import { UserService } from './../services/UserService';
+import { validateID } from './../mappers/UserMapper'
 import { Request, Response } from "express"
-
-const userService = new UserService();
 
 export class UserController {
 
-    static async create(req: Request, res: Response) {
-         try {
-            const user = await userService.createUser(req.body);
-            return res.status(201).json(user);
-         } catch (error: any) {
-            const response: any = {
-            message: error.message
-            };
+    constructor(private userService: UserService) {}
 
-            if (error.errors) {
-                response.errors = error.errors;
-            }
+    static async createUser(req: Request, res: Response): Promise<void>{
 
-            return res.status(error.status || 500).json(response);
-        }
-
+        const userData: UserRequestDTO = req.body;
+        const user = await this.userService.createUser(userData);
+        const response = UserMapper.toDTO(user);
+        res.status(201).json(response);
     }
 
-    static async getAll(req: Request, res: Response){
-        try {
-            const users = await userService.getAll();
-            return res.status(200).json(users);
-        } catch (error: any) {
-            const response: any = {
-            message: error.message
-            };
-
-            if (error.errors) {
-                response.errors = error.errors;
-            }
-
-            return res.status(error.status || 500).json(response);
-        }
+    static async getUSers(req: Request, res: Response): Promise<void> {
+        const users = await this.userService.getUsers();
+        const response = UserMapper.toDTOArray(users);
+        res.status(200).json(response);
     }
 
-    static async getByID(req: Request, res: Response) {
-        try {
-            const { id } = req.params;
-            const users = await userService.getByID(id);
-            return res.status(200).json(users);
-        } catch (error: any) {
-            const response: any = {
-            message: error.message
-            };
-
-            if (error.errors) {
-            response.errors = error.errors;
-            }
-
-            return res.status(error.status || 500).json(response);
-        }
+    static async getUserByID(req: Request, res: Response): Promise<void> {
+        const id = validateID(req.params.id);
+        //DO VALIDATE ID
+        const user = await this.userService.getUserByID(id);
+        const response = UserMapper.toDTO(user);
+        res.status(200).json(response);
     }
 
-    static async update(req: Request, res: Response) {
-        try {
-            const { id } = req.params;
-            const users = await userService.update(id, req.body);
-            return res.status(200).json(users);
-        } catch (error: any) {
-            const response: any = {
-            message: error.message
-            };
-
-            if (error.errors) {
-            response.errors = error.errors;
-            }
-
-            return res.status(error.status || 500).json(response);
-        }
+    static async updateUser(req: Request, res: Response): Promise<void> {
+        const id = validateID(req.params.id);
+        const userData: UserResponseDTO = req.body;
+        const user = await this.userService.updateUserByID(id, userData);
+        const response = UserMapper.toDTO(user);
+        res.status(200).json(response);
     }
 
-     static async delete(req: Request, res: Response) {
-        try {
-            const { id } = req.params;
-            const result = await userService.delete(id);
-            return res.status(200).json(result);
-       } catch (error: any) {
-            const response: any = {
-            message: error.message
-            };
-
-            if (error.errors) {
-            response.errors = error.errors;
-            }
-
-            return res.status(error.status || 500).json(response);
-        }
+     static async deleteUser(req: Request, res: Response): Promise<void> {
+        const id = validateID(req.params.id);
+        await this.userService.deleteUser(id); //TROCAR PARA TER RETORNO
+        res.status(204).send();
     }
 
 }

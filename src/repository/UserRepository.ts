@@ -1,6 +1,9 @@
+import { IUserRepository } from './../interfaces/IUserRepository';
 import { User } from "../models/User";
 
-export class UserRepository {
+export class UserRepository implements IUserRepository {
+
+  private userModel = User;
 
   async create(userData: any) {
     return await User.create(

@@ -1,3 +1,10 @@
+import { UserRepository } from './../repository/UserRepository';
+import { ConflictError, NotFoundError } from './../errors/AppError';
+import { 
+    createUpdateUserSchema,
+    validateWithZod
+} from './../schemas/userSchema';
+import { IUserRepository } from './../interfaces/IUserRepository';
 import { plainToInstance } from "class-transformer";
 import { UserRequestDTO } from "../Dto/UserDTO/UserRequestDTO";
 import { UserResponseDTO } from "../Dto/UserDTO/UserResponseDTO";
@@ -10,103 +17,100 @@ const userRepository = new UserRepository();
 
 export class UserService {
 
-    async createUser(data: UserRequestDTO) {
+    constructor(private userRepository: IUserRepository) {}
 
-        const dto = plainToInstance(UserRequestDTO, data);
-        await this.errosValidacao(dto);
+    async createUser(data: UserRequestDTO): Promise<User> {
 
-        const { name, email, password, cpf, telefone } = dto;
-
-        if(await userRepository.findByEmail(email)){
-            throw new UserAlreadyExistsException("O email informado já pertence ao um usuário")
-        }
-        if(await userRepository.findByCPF(cpf)){
-            throw new UserAlreadyExistsException("O cpf informado já pertence ao um usuário")
+        const validateData = validateWithZod(createUpdateUserSchema, data);
+        
+        let existing = await this.userRepository.findByCPF(validateData.cpf);
+        if (existing) {
+            throw new ConflictError('Usuario com este cpf já existe');
         }
 
-        const user = await userRepository.create(
-            { name,
-            email,
-            password,
-            cpf,
-            telefone}
-        );
- 
-        const plainUser = user.get({ plain: true });
-        return plainToInstance(UserResponseDTO, plainUser, {
-            excludeExtraneousValues: true,
+        existing = await this.userRepository.findByEmail(validateData.email);
+        if(existing){
+            throw new ConflictError('Usuario com este email já existe');
+        }
+
+        return await this.userRepository.create({
+            name: validateData.name,
+            email: validateData.email,
+            password: validateData.password,
+            cpf: validateData.cpf,
+            telefone: validateData.telefone
         });
      }
 
-    async getAll() {
+    async getUsers(): Promise<User[]> {
+
         const users = await userRepository.getAllUsers();
 
         if (users.length == 0) {
-            throw new NotFoundUserException("Nenhum usuário encontrado");
+            throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        return users.map(user =>
-            plainToInstance(
-                UserResponseDTO,
-                user.get({ plain: true }),
-                { excludeExtraneousValues: true }
-            )
-        );
+        return users;
     }
 
-    async getByID(id: string) {
-        const user = await userRepository.findByID(id);
+    async getUserByID(id: string): Promise<User> {
+        const validateID = validateID(id);
+        const user = await userRepository.findByID(validateID);
 
         if(!user){
-            throw new NotFoundUserException("Nenhum usuário encontrado");
+            throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        const plainUser = user.get({ plain: true });
-        return plainToInstance(UserResponseDTO, plainUser, {
-            excludeExtraneousValues: true,
-        }); 
+        return user;
     }
 
-    async update(id: string, data: UserRequestDTO){
-        const dto = plainToInstance(UserRequestDTO, data);
+    async updateUserByID(id: string, data: UserRequestDTO): Promise<User> {
+        const validateID = validateID(id);
+        const validateData = validateWithZod(createUpdateUserSchema, data);
+        
+        const user = await this.userRepository.findByID(validateID);
+         if(!user){
+            throw new NotFoundError("Nenhum usuário encontrado");
+        }
 
-        this.errosValidacao(dto);
+        const existingCPF = await this.userRepository.findByCPF(validateData.cpf);
+        if(existingCPF){
+            if(existingCPF.id !== validateData.id) {
+                throw new ConflictError('Usuario com este cpf já existe');
+            }
+        } 
 
-        const user = await userRepository.update(id, dto);
+        const existingEmail = await this.userRepository.findByCPF(validateData.email);
+        if(existingEmail){
+            if(existingEmail.id !== validateData.id) {
+                throw new ConflictError('Usuario com este email já existe');
+            }
+        } 
+
+        const updateUser = await this.userRepository.update(validateID, validateData);
+
+        if(!updateUser) {
+            throw new NotFoundError('Erro ao atualizar usuario');
+        }
+
+        return updateUser;
+
+
+    }
+
+    async delete(id: string) {
+
+        const validateID = validateID(id);
+
+        const user = await this.userRepository.findByID(validateID);
 
         if(!user){
-           throw new NotFoundUserException("Nenhum usuário encontrado"); 
+             throw new NotFoundError('Nenhum usuário encontrado');
         }
 
-        const plainUser = user.get({ plain: true });
-        return plainToInstance(UserResponseDTO, plainUser, {
-            excludeExtraneousValues: true,
-        }); 
-    }
-
-    async delete(id: string){
-
-        const user = userRepository.delete(id);
-
-        if(!user){
-             throw new NotFoundUserException("Nenhum usuário encontrado");
-        }
-
-        return { message: "Usuário deletado com sucesso" };
-    }
-
-    private async errosValidacao(dto: UserRequestDTO){
-        const errors = await validate(dto);
-    
-        if (errors.length > 0) {
-            const errorMessages = errors
-            .map(err => Object.values(err.constraints || {}))
-            .flat();
-
-            const validationError: any = new Error("Erros de validação");
-            validationError.status = 400;
-            validationError.errors = errorMessages;
-            throw validationError;
+        const deleted = await this.userRepository.delete(validateID);
+        if(!deleted) {
+            throw new NotFoundError('Erro ao deletar usuario');
         }
     }
   
