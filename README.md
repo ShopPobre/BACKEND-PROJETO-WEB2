@@ -17,10 +17,10 @@ Estas entidades são **essenciais para o funcionamento** do sistema e compõem o
 
 | Entidade      | Descrição                                              | Relacionamentos                                           |
 | ------------- | ------------------------------------------------------ | --------------------------------------------------------- |
-| **User**      | Representa os usuários do sistema (Admin e Cliente).   | 1:N com `Order`, 1:N com `Address`, 1:N com `Review`      |
+| **User**      | Representa os usuários do sistema (Admin e Cliente).   | 1:N com `Order`, 1:N com `Address`                        |
 | **Role**      | Define os papéis de usuário (`ADMIN`, `CUSTOMER`).     | 1:N com `User`                                            |
 | **Category**  | Classifica produtos (Ex: Eletrônicos, Roupas).         | 1:N com `Product`                                         |
-| **Product**   | Produto à venda, com nome, preço, descrição e estoque. | N:1 com `Category`, 1:N com `Review`, 1:N com `OrderItem` |
+| **Product**   | Produto à venda, com nome, preço, descrição e estoque. | N:1 com `Category`, 1:N com `OrderItem`                   |
 | **Inventory** | Controla o estoque de cada produto.                    | 1:1 com `Product`                                         |
 | **Order**     | Pedido realizado por um cliente.                       | N:1 com `User`, 1:N com `OrderItem`, 1:1 com `Payment`    |
 | **OrderItem** | Item dentro de um pedido.                              | N:1 com `Order`, N:1 com `Product`                        |
