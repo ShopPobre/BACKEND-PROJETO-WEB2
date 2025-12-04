@@ -6,7 +6,7 @@ import {
 } from './../schemas/userSchema';
 import { IUserRepository } from './../interfaces/IUserRepository';
 import { UserRepository } from "../repository/UserRepository";
-import { UserRequestDTO } from '../dto/UserDTO/UserDTO';
+import { UserRequestDTO } from '../dto/UserDTO';
 import { User } from '../models/User';
 
 const userRepository = new UserRepository(); 

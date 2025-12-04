@@ -1,4 +1,4 @@
-import { UserResponseDTO } from './../Dto/UserDTO/UserResponseDTO';
+import { UserResponseDTO } from '../dto/UserDTO';
 import { User } from './../models/User';
 export class UserMapper {
 

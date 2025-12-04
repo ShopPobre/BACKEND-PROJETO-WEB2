@@ -1,4 +1,3 @@
-import { UserResponseDTO } from './../../Dto/UserDTO/UserResponseDTO';
 export interface UserRequestDTO {
 
     name: string;
@@ -13,7 +12,8 @@ export interface UserResponseDTO {
 
     id: string;
     name: string;
-    email: string
+    email: string;
+    cpf: string;
     telefone: string;
     
 }
