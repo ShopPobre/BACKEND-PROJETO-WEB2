@@ -1,7 +1,7 @@
 import { UserMapper } from './../mappers/UserMapper';
 import { UserService } from './../services/UserService';
 import { Request, Response } from "express"
-import { UserRequestDTO } from '../dto/UserDTO/UserDTO';
+import { UserRequestDTO } from '../dto/UserDTO';
 import { validateID } from '../schemas/userSchema';
 
 export class UserController {
@@ -15,10 +15,9 @@ export class UserController {
             const response = UserMapper.toDTO(user);
             return res.status(201).json(response);
         }  catch (error: any) {
-            console.error(error);
             return res
             .status(500)
-            .json({ message: "Erro ao retornar os usuários", error: error.message });
+            .json({ message: "Erro ao cadastrar o usuario", error: error.message });
         }
       
     }
@@ -70,8 +69,8 @@ export class UserController {
     async deleteUser(req: Request, res: Response) {
         try {
             const id = validateID(req.params.id);
-            await this.userService.deleteUser(id); 
-            return res.status(204).send();
+            const response = await this.userService.deleteUser(id); 
+            return res.status(204).json(response);
         } catch (error: any) {
             console.error(error);
             return res

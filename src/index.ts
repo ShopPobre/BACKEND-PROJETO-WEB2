@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import dotenv from "dotenv";
 import sequelize from "./config/database";
 import userRoutes from "./routes/userRoutes";
+import addressRoutes from "./routes/addressRoutes";
 
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
+app.use("/api/users/:userId/addresses", addressRoutes);
 
 // Inicializar servidor
 const startServer = async () => {
@@ -54,6 +56,7 @@ const startServer = async () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
             console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
+            console.log(`📍 Addresses API: http://localhost:${PORT}/api/users/:userId/addresses`);
         });
     } catch (error) {
         console.error("❌ Erro ao iniciar servidor:", error);
