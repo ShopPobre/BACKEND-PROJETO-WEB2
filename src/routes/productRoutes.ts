@@ -4,13 +4,17 @@ import { ProductService } from "../services/ProductService";
 import { ProductRepository } from "../repository/ProductRepository";
 import { CategoryRepository } from "../repository/CategoryRepository";
 import { asyncHandler } from "../middleware/errorHandler";
+import { InventoryService } from "../services/InventoryService";
+import { InventoryRepository } from "../repository/InventoryRepository";
 
 const router = Router();
 
 // Dependency Injection
 const productRepository = new ProductRepository();
 const categoryRepository = new CategoryRepository();
-const productService = new ProductService(productRepository, categoryRepository);
+const inventoryRepository = new InventoryRepository()
+const inventoryService = new InventoryService(inventoryRepository, productRepository);
+const productService = new ProductService(productRepository, categoryRepository, inventoryService);
 const productController = new ProductController(productService);
 
 /**

@@ -6,6 +6,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import productRoutes from "./routes/productRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
+import inventoryRoutes from "./routes/inventoryRoutes";
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/inventory/:productId", inventoryRoutes);
 
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);

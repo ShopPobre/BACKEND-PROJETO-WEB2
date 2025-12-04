@@ -9,11 +9,13 @@ import {
     validateWithZod,
     validateId
 } from "../schemas/productSchema";
+import { InventoryService } from "./InventoryService";
 
 export class ProductService {
     constructor(
         private productRepository: IProductRepository,
-        private categoryRepository: ICategoryRepository
+        private categoryRepository: ICategoryRepository,
+        private invetoryService: InventoryService
     ) {}
 
     async createProduct(data: CreateProductDTO): Promise<Product> {
@@ -32,13 +34,17 @@ export class ProductService {
             throw new ConflictError('Produto com este nome já existe');
         }
 
-        return await this.productRepository.create({
+        const product = await this.productRepository.create({
             name: validatedData.name,
             description: validatedData.description || null,
             price: validatedData.price,
             categoryId: validatedData.categoryId,
             isActive: true
         });
+
+        await this.invetoryService.createInventory(product.id);
+
+        return product;
     }
 
     async getProducts(): Promise<Product[]> {
@@ -139,6 +145,8 @@ export class ProductService {
             throw new NotFoundError('Produto não encontrado');
         }
 
+
+        await this.invetoryService.deleteInventory(validatedId);
         const deleted = await this.productRepository.delete(validatedId);
         if (!deleted) {
             throw new NotFoundError('Erro ao deletar produto');
