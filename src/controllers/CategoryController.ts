@@ -7,37 +7,68 @@ import { validateId } from "../schemas/categorySchema";
 export class CategoryController {
     constructor(private categoryService: CategoryService) {}
 
-    async createCategory(req: Request, res: Response): Promise<void> {
-        const categoryData: CreateCategoryDTO = req.body;
-        const category = await this.categoryService.createCategory(categoryData);
-        const response = CategoryMapper.toDTO(category);
-        res.status(201).json(response);
+    async createCategory(req: Request, res: Response) {
+        try {
+            const categoryData: CreateCategoryDTO = req.body;
+            const category = await this.categoryService.createCategory(categoryData);
+            const response = CategoryMapper.toDTO(category);
+            return res.status(201).json(response);
+        } catch (error: any) {
+            return res
+            .status(500)
+            .json({ message: "Erro ao cadastrar a categoria", error: error.message });
+        }
     }
 
-    async getCategories(req: Request, res: Response): Promise<void> {
-        const categories = await this.categoryService.getCategories();
-        const response = CategoryMapper.toDTOArray(categories);
-        res.status(200).json(response);
+    async getCategories(req: Request, res: Response) {
+        try {
+            const categories = await this.categoryService.getCategories();
+            const response = CategoryMapper.toDTOArray(categories);
+            return res.status(200).json(response);
+        } catch (error: any) {
+            return res
+            .status(500)
+            .json({ message: "Erro ao buscar categorias", error: error.message });
+        }
     }
 
-    async getCategoryById(req: Request, res: Response): Promise<void> {
-        const id = validateId(req.params.id);
-        const category = await this.categoryService.getCategoryById(id);
-        const response = CategoryMapper.toDTO(category);
-        res.status(200).json(response);
+    async getCategoryById(req: Request, res: Response) {
+        try {
+            const id = validateId(req.params.id);
+            const category = await this.categoryService.getCategoryById(id);
+            const response = CategoryMapper.toDTO(category);
+            return res.status(200).json(response);
+        } catch (error: any) {
+            return res
+            .status(500)
+            .json({ message: "Erro ao buscar categoria", error: error.message });
+        }
     }
 
-    async updateCategory(req: Request, res: Response): Promise<void> {
-        const id = validateId(req.params.id);
-        const categoryData: UpdateCategoryDTO = req.body;
-        const category = await this.categoryService.updateCategoryById(id, categoryData);
-        const response = CategoryMapper.toDTO(category);
-        res.status(200).json(response);
+    async updateCategory(req: Request, res: Response) {
+        try {
+            const id = validateId(req.params.id);
+            const categoryData: UpdateCategoryDTO = req.body;
+            const category = await this.categoryService.updateCategoryById(id, categoryData);
+            const response = CategoryMapper.toDTO(category);
+            return res.status(200).json(response);
+        }  catch (error: any) {
+            return res
+            .status(500)
+            .json({ message: "Erro ao atualizar categoria", error: error.message });
+        }
+
     }
 
-    async deleteCategory(req: Request, res: Response): Promise<void> {
-        const id = validateId(req.params.id);
-        await this.categoryService.deleteCategory(id);
-        res.status(204).send();
+    async deleteCategory(req: Request, res: Response) {
+        try {
+            const id = validateId(req.params.id);
+            await this.categoryService.deleteCategory(id);
+            return res.status(204).send();
+        } catch (error: any) {
+            return res
+            .status(500)
+            .json({ message: "Erro ao deletar categoria", error: error.message });
+        }
     }
 }

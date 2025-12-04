@@ -42,7 +42,11 @@ export class ProductService {
     }
 
     async getProducts(): Promise<Product[]> {
-        return await this.productRepository.getAllProducts();
+        const products = await this.productRepository.getAllProducts();
+        if (products.length === 0) {
+             throw new NotFoundError('Nenhuma produto encontrado');
+        }
+        return products;
     }
 
     async getProductById(id: number): Promise<Product> {

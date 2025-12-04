@@ -30,7 +30,11 @@ export class CategoryService {
     }
 
     async getCategories(): Promise<Category[]> {
-        return await this.categoryRepository.getAllCategories();
+        const categories = await this.categoryRepository.getAllCategories()
+        if(categories.length === 0) {
+             throw new NotFoundError('Nenhuma categoria encontrada');
+        }
+        return categories;
     }
 
     async getCategoryById(id: number): Promise<Category> {
