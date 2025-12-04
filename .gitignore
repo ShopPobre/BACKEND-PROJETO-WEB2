@@ -1,1 +1,5 @@
 node_modules
+.env
+*[a-zA-Z0-9]*.md
+dist
+package-lock.json
