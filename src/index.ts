@@ -1,6 +1,8 @@
 import express, { Express } from "express";
-import swaggerUi from "swagger-ui-express";
 import dotenv from "dotenv";
+import userRoutes from "./routes/userRoutes";
+import addressRoutes from "./routes/addressRoutes";
+import swaggerUi from "swagger-ui-express";
 import sequelize from "./config/database";
 import categoryRoutes from "./routes/categoryRoutes";
 import productRoutes from "./routes/productRoutes";
@@ -52,6 +54,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Routes
+app.use("/api/users", userRoutes);
+app.use("/api/users/:userId/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 
@@ -67,13 +71,15 @@ const startServer = async () => {
 
         // Sincronizar modelos (apenas em desenvolvimento)
         if (process.env.NODE_ENV !== "production") {
-            await sequelize.sync({ alter: true });
+            await sequelize.sync({ force: true });
             console.log("✅ Modelos sincronizados com o banco de dados.");
         }
 
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
+            console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
+            console.log(`📍 Addresses API: http://localhost:${PORT}/api/users/:userId/addresses`);
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
             console.log(`📍 Products API: http://localhost:${PORT}/api/products`);
             console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
@@ -87,4 +93,3 @@ const startServer = async () => {
 startServer();
 
 export default app;
-
