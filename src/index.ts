@@ -8,6 +8,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import productRoutes from "./routes/productRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
+import inventoryRoutes from "./routes/inventoryRoutes";
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/users/:userId/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/inventory/:productId", inventoryRoutes);
 
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
