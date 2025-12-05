@@ -301,6 +301,405 @@ const swaggerDefinition: SwaggerDefinition = {
                     }
                 }
             },
+            // User Schemas
+            CreateUserDTO: {
+                type: "object",
+                required: ["name", "email", "password", "cpf", "telefone"],
+                properties: {
+                    name: {
+                        type: "string",
+                        minLength: 1,
+                        example: "João Silva",
+                        description: "Nome completo do usuário (obrigatório)"
+                    },
+                    email: {
+                        type: "string",
+                        format: "email",
+                        example: "joao.silva@example.com",
+                        description: "Email do usuário (obrigatório, formato válido)"
+                    },
+                    password: {
+                        type: "string",
+                        minLength: 6,
+                        example: "senha123",
+                        description: "Senha do usuário (obrigatório, mínimo 6 caracteres)"
+                    },
+                    cpf: {
+                        type: "string",
+                        length: 11,
+                        example: "12345678901",
+                        description: "CPF do usuário (obrigatório, 11 caracteres)"
+                    },
+                    telefone: {
+                        type: "string",
+                        example: "(11) 98765-4321",
+                        description: "Telefone do usuário no formato brasileiro (obrigatório)"
+                    }
+                }
+            },
+            UpdateUserDTO: {
+                type: "object",
+                properties: {
+                    name: {
+                        type: "string",
+                        minLength: 1,
+                        example: "João Silva",
+                        description: "Nome completo do usuário"
+                    },
+                    email: {
+                        type: "string",
+                        format: "email",
+                        example: "joao.silva@example.com",
+                        description: "Email do usuário (formato válido)"
+                    },
+                    password: {
+                        type: "string",
+                        minLength: 6,
+                        example: "senha123",
+                        description: "Senha do usuário (mínimo 6 caracteres)"
+                    },
+                    telefone: {
+                        type: "string",
+                        example: "(11) 98765-4321",
+                        description: "Telefone do usuário no formato brasileiro"
+                    }
+                }
+            },
+            UserResponseDTO: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174000",
+                        description: "ID único do usuário (UUID)"
+                    },
+                    name: {
+                        type: "string",
+                        example: "João Silva",
+                        description: "Nome completo do usuário"
+                    },
+                    email: {
+                        type: "string",
+                        format: "email",
+                        example: "joao.silva@example.com",
+                        description: "Email do usuário"
+                    },
+                    cpf: {
+                        type: "string",
+                        example: "12345678901",
+                        description: "CPF do usuário"
+                    },
+                    telefone: {
+                        type: "string",
+                        example: "(11) 98765-4321",
+                        description: "Telefone do usuário"
+                    }
+                }
+            },
+            // Address Schemas
+            CreateAddressDTO: {
+                type: "object",
+                required: ["rua", "numero", "cep", "cidade", "estado", "tipo"],
+                properties: {
+                    rua: {
+                        type: "string",
+                        minLength: 1,
+                        example: "Rua das Flores",
+                        description: "Nome da rua (obrigatório)"
+                    },
+                    numero: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 123,
+                        description: "Número do endereço (obrigatório, positivo)"
+                    },
+                    cep: {
+                        type: "string",
+                        pattern: "^\\d{5}-?\\d{3}$",
+                        example: "12345-678",
+                        description: "CEP no formato 00000-000 (obrigatório)"
+                    },
+                    cidade: {
+                        type: "string",
+                        minLength: 1,
+                        example: "São Paulo",
+                        description: "Cidade (obrigatório)"
+                    },
+                    estado: {
+                        type: "string",
+                        minLength: 2,
+                        example: "SP",
+                        description: "Estado (obrigatório, mínimo 2 caracteres)"
+                    },
+                    tipo: {
+                        type: "string",
+                        enum: ["CASA", "TRABALHO", "OUTRO"],
+                        example: "CASA",
+                        description: "Tipo de endereço (obrigatório)"
+                    }
+                }
+            },
+            UpdateAddressDTO: {
+                type: "object",
+                properties: {
+                    rua: {
+                        type: "string",
+                        minLength: 1,
+                        example: "Rua das Flores",
+                        description: "Nome da rua"
+                    },
+                    numero: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 123,
+                        description: "Número do endereço (positivo)"
+                    },
+                    cep: {
+                        type: "string",
+                        pattern: "^\\d{5}-?\\d{3}$",
+                        example: "12345-678",
+                        description: "CEP no formato 00000-000"
+                    },
+                    cidade: {
+                        type: "string",
+                        minLength: 1,
+                        example: "São Paulo",
+                        description: "Cidade"
+                    },
+                    estado: {
+                        type: "string",
+                        minLength: 2,
+                        example: "SP",
+                        description: "Estado (mínimo 2 caracteres)"
+                    },
+                    tipo: {
+                        type: "string",
+                        enum: ["CASA", "TRABALHO", "OUTRO"],
+                        example: "CASA",
+                        description: "Tipo de endereço"
+                    }
+                }
+            },
+            AddressResponseDTO: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174001",
+                        description: "ID único do endereço (UUID)"
+                    },
+                    rua: {
+                        type: "string",
+                        example: "Rua das Flores",
+                        description: "Nome da rua"
+                    },
+                    numero: {
+                        type: "integer",
+                        example: 123,
+                        description: "Número do endereço"
+                    },
+                    cep: {
+                        type: "string",
+                        example: "12345-678",
+                        description: "CEP"
+                    },
+                    cidade: {
+                        type: "string",
+                        example: "São Paulo",
+                        description: "Cidade"
+                    },
+                    estado: {
+                        type: "string",
+                        example: "SP",
+                        description: "Estado"
+                    },
+                    tipo: {
+                        type: "string",
+                        enum: ["CASA", "TRABALHO", "OUTRO"],
+                        example: "CASA",
+                        description: "Tipo de endereço"
+                    }
+                }
+            },
+            // Inventory Schemas
+            InventoryResponseDTO: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "integer",
+                        example: 1,
+                        description: "ID único do estoque"
+                    },
+                    productId: {
+                        type: "integer",
+                        example: 1,
+                        description: "ID do produto"
+                    },
+                    quantity: {
+                        type: "integer",
+                        minimum: 0,
+                        example: 50,
+                        description: "Quantidade disponível em estoque"
+                    },
+                    minQuantity: {
+                        type: "integer",
+                        minimum: 0,
+                        example: 10,
+                        description: "Quantidade mínima de estoque"
+                    },
+                    maxQuantity: {
+                        type: "integer",
+                        nullable: true,
+                        minimum: 0,
+                        example: 1000,
+                        description: "Quantidade máxima de estoque (opcional)"
+                    },
+                    isActive: {
+                        type: "boolean",
+                        example: true,
+                        description: "Status ativo/inativo do estoque"
+                    },
+                    createdAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de criação"
+                    },
+                    updatedAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de atualização"
+                    }
+                }
+            },
+            InventoryUpdateDTO: {
+                type: "object",
+                required: ["quantity"],
+                properties: {
+                    quantity: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 10,
+                        description: "Quantidade a ser adicionada ou removida (obrigatório, positivo)"
+                    }
+                }
+            },
+            // Order Schemas
+            CreateOrderItemDTO: {
+                type: "object",
+                required: ["productId", "quantity"],
+                properties: {
+                    productId: {
+                        type: "integer",
+                        minimum: 1,
+                        example: 1,
+                        description: "ID do produto (obrigatório)"
+                    },
+                    quantity: {
+                        type: "integer",
+                        minimum: 1,
+                        maximum: 9999,
+                        example: 2,
+                        description: "Quantidade do produto (obrigatório, 1-9999)"
+                    }
+                }
+            },
+            CreateOrderDTO: {
+                type: "object",
+                required: ["userId", "addressId", "items"],
+                properties: {
+                    userId: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174000",
+                        description: "ID do usuário (UUID, obrigatório)"
+                    },
+                    addressId: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174001",
+                        description: "ID do endereço de entrega (UUID, obrigatório)"
+                    },
+                    items: {
+                        type: "array",
+                        minItems: 1,
+                        items: {
+                            $ref: "#/components/schemas/CreateOrderItemDTO"
+                        },
+                        description: "Lista de itens do pedido (obrigatório, mínimo 1 item)"
+                    }
+                }
+            },
+            UpdateOrderDTO: {
+                type: "object",
+                properties: {
+                    status: {
+                        type: "string",
+                        enum: ["PENDENTE", "CONFIRMADO", "EM_PREPARACAO", "ENVIADO", "ENTREGUE", "CANCELADO"],
+                        example: "CONFIRMADO",
+                        description: "Status do pedido"
+                    },
+                    addressId: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174002",
+                        description: "ID do endereço de entrega (UUID)"
+                    }
+                }
+            },
+            OrderResponseDTO: {
+                type: "object",
+                properties: {
+                    id: {
+                        type: "integer",
+                        example: 1,
+                        description: "ID único do pedido"
+                    },
+                    userId: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174000",
+                        description: "ID do usuário que fez o pedido"
+                    },
+                    addressId: {
+                        type: "string",
+                        format: "uuid",
+                        example: "123e4567-e89b-12d3-a456-426614174001",
+                        description: "ID do endereço de entrega"
+                    },
+                    status: {
+                        type: "string",
+                        enum: ["PENDENTE", "CONFIRMADO", "EM_PREPARACAO", "ENVIADO", "ENTREGUE", "CANCELADO"],
+                        example: "PENDENTE",
+                        description: "Status atual do pedido"
+                    },
+                    total: {
+                        type: "number",
+                        format: "decimal",
+                        example: 5999.98,
+                        description: "Valor total do pedido"
+                    },
+                    createdAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de criação do pedido"
+                    },
+                    updatedAt: {
+                        type: "string",
+                        format: "date-time",
+                        nullable: true,
+                        example: "2024-01-15T10:30:00.000Z",
+                        description: "Data de atualização do pedido"
+                    }
+                }
+            },
             // Health Check Schema
             HealthCheck: {
                 type: "object",
@@ -361,6 +760,22 @@ const swaggerDefinition: SwaggerDefinition = {
         {
             name: "Products",
             description: "Operações relacionadas ao gerenciamento de produtos"
+        },
+        {
+            name: "Users",
+            description: "Operações relacionadas ao gerenciamento de usuários"
+        },
+        {
+            name: "Addresses",
+            description: "Operações relacionadas ao gerenciamento de endereços"
+        },
+        {
+            name: "Inventory",
+            description: "Operações relacionadas ao gerenciamento de estoque"
+        },
+        {
+            name: "Orders",
+            description: "Operações relacionadas ao gerenciamento de pedidos"
         },
         {
             name: "Authentication",
