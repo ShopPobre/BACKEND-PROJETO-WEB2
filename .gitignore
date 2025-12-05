@@ -1,5 +1,22 @@
-node_modules
-.env
+# Dependências
+node_modules/
+
+# Arquivos de Log e Temporários
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 *[a-zA-Z0-9]*.md
-dist
+*.log
+.env
+.env.local
+.DS_Store
+
+# Arquivos de build/dist
+dist/
+build/
+
+# Arquivos do editor/IDE (VS Code, por exemplo)
+.vscode/
+
+
 package-lock.json
