@@ -9,6 +9,9 @@ import productRoutes from "./routes/productRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
 import inventoryRoutes from "./routes/inventoryRoutes";
+import orderRoutes from "./routes/orderRoutes";
+// Import models to establish relationships
+import "./models/index";
 
 dotenv.config();
 
@@ -60,6 +63,7 @@ app.use("/api/users/:userId/addresses", addressRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory/:productId", inventoryRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
@@ -84,6 +88,7 @@ const startServer = async () => {
             console.log(`📍 Addresses API: http://localhost:${PORT}/api/users/:userId/addresses`);
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
             console.log(`📍 Products API: http://localhost:${PORT}/api/products`);
+            console.log(`📍 Orders API: http://localhost:${PORT}/api/orders`);
             console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
         });
     } catch (error) {
