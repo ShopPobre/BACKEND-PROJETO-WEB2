@@ -1,4 +1,3 @@
-import { Optional } from 'sequelize';
 import { z } from "zod";
 import { ValidationError } from "../errors/AppError";
 

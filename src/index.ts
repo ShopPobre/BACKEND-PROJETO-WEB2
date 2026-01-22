@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
 import inventoryRoutes from "./routes/inventoryRoutes";
 import orderRoutes from "./routes/orderRoutes";
+import authRoutes from "./routes/authRoutes";
 // Import models to establish relationships
 import "./models/index";
 
@@ -64,7 +65,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory/:productId", inventoryRoutes);
 app.use("/api/orders", orderRoutes);
-
+app.use("/api/auth", authRoutes);
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
 
@@ -84,6 +85,7 @@ const startServer = async () => {
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
+            console.log(`📍 AUTH API: http://localhost:${PORT}/api/auth`);
             console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
             console.log(`📍 Addresses API: http://localhost:${PORT}/api/users/:userId/addresses`);
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
