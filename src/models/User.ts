@@ -5,7 +5,7 @@ export interface UserAttributes {
   id: string,
   name: string;
   email: string;
-  password: string;
+  passwordHash: string;
   cpf: string;
   telefone: string;
 }
@@ -16,7 +16,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public id!: string;
   public name!: string;
   public email!: string;
-  public password!: string; 
+  public passwordHash!: string; 
   public cpf!: string;
   public telefone!: string;
 
@@ -40,7 +40,7 @@ User.init(
       allowNull: false,
       unique: true, 
     },
-    password: {
+    passwordHash: {
       type: DataTypes.STRING,
       allowNull: false,
     },
