@@ -3,11 +3,13 @@ import { UserService } from './../services/UserService';
 import { UserRepository } from './../repository/UserRepository';
 import { asyncHandler } from "../middleware/errorHandler";
 import { Request, Response, NextFunction, Router } from "express"
+import { BcryptService } from '../services/hashing/BcryptService';
 
 const router = Router();
 
 const userRepository = new UserRepository();
-const userService = new UserService(userRepository);
+const hashingService = new BcryptService();
+const userService = new UserService(userRepository, hashingService);
 const userController = new UserController(userService);
 
 /**
