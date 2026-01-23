@@ -4,6 +4,8 @@ import { UserRepository } from './../repository/UserRepository';
 import { asyncHandler } from "../middleware/errorHandler";
 import { Request, Response, NextFunction, Router } from "express"
 import { BcryptService } from '../services/hashing/BcryptService';
+import { ensureAuthenticated } from '../middleware/authMiddleware';
+
 
 const router = Router();
 
@@ -11,6 +13,8 @@ const userRepository = new UserRepository();
 const hashingService = new BcryptService();
 const userService = new UserService(userRepository, hashingService);
 const userController = new UserController(userService);
+
+router.use(ensureAuthenticated as any);
 
 /**
  * @swagger
