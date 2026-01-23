@@ -1,3 +1,5 @@
+import { JwtService } from '@nestjs/jwt';
+import jwtConfig from '../config/jwt';
 import { AuthRequestDTO } from '../dto/AuthDTO';
 import { NotFoundError, UnauthorizedError } from '../errors/AppError';
 import { IHashingService } from '../interfaces/hashing/IHashingService';
@@ -13,7 +15,8 @@ export class AuthService {
 
     constructor(
         private userRepository: IUserRepository,
-        private hashingService: IHashingService
+        private hashingService: IHashingService,
+        private jwtService: JwtService
     ) {}
 
     //TROCAR RETORNO
