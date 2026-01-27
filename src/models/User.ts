@@ -8,6 +8,7 @@ export interface UserAttributes {
   passwordHash: string;
   cpf: string;
   telefone: string;
+  role: 'USER' | 'ADMIN';
 }
 
 interface UserCreationAttributes extends Optional<UserAttributes, 'id'> {}
@@ -19,7 +20,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> implemen
   public passwordHash!: string; 
   public cpf!: string;
   public telefone!: string;
-
+  public role!: 'USER' | 'ADMIN';
 
 }
 
@@ -52,6 +53,11 @@ User.init(
     telefone: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    role: {
+      type: DataTypes.ENUM('USER', 'ADMIN'),
+      allowNull: false,
+      defaultValue: 'USER',
     },
   },
   {
