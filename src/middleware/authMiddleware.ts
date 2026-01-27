@@ -1,29 +1,23 @@
-import { NextFunction, Request } from "express";
-import { UnauthorizedError } from "../errors/AppError";
-import jwt, { JwtPayload } from "jsonwebtoken";
-import jwtConfig from "../config/jwt";
+import { NextFunction, Request, Response } from "express";
+import { BadRequestError, UnauthorizedError } from "../errors/AppError";
+import { verifyToken } from "../utils/auth";
 
 export async function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
 
     const token = extractTokenFromHeader(req);
 
     if(!token) {
-        throw new UnauthorizedError('Não logado!');
+        throw new UnauthorizedError('Access denied. No token provided.');
     }
 
     try {
-        console.log('JWT SECRET:', jwtConfig.secret);
-        const payload = await jwt.verify(token, jwtConfig.secret, {
-            algorithms: ['HS512']
-        });
-        
-        console.log(payload);
-            
-    } catch (error) {
-        console.log(error);
+        const decoded = verifyToken(token);
+        (req as any).user = decoded; 
+        next();
+    } catch (err) {
+        throw new BadRequestError('Invalid token.');
     }
-
-    return true;
+    
 }
 
 export function extractTokenFromHeader(req: Request): string | undefined {

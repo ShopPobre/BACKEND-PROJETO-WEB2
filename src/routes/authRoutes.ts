@@ -14,7 +14,7 @@ const hashingService = new BcryptService();
 const authService = new AuthService(userRepository, hashingService);
 const authController = new AuthController(authService);
 
-router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.post("/login", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await authController.login(req, res);
 }));
 

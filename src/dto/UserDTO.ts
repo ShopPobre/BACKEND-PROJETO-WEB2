@@ -5,7 +5,7 @@ export interface UserRequestDTO {
     password: string;
     cpf: string;
     telefone: string;
-
+    
 }
 
 export interface UserUpdateRequestDTO {

@@ -5,6 +5,7 @@ import { asyncHandler } from "../middleware/errorHandler";
 import { Request, Response, NextFunction, Router } from "express"
 import { BcryptService } from '../services/hashing/BcryptService';
 import { ensureAuthenticated } from '../middleware/authMiddleware';
+import { ensureRole } from '../middleware/ensureRole';
 
 
 const router = Router();
@@ -14,7 +15,7 @@ const hashingService = new BcryptService();
 const userService = new UserService(userRepository, hashingService);
 const userController = new UserController(userService);
 
-router.use(ensureAuthenticated as any);
+//router.use(ensureAuthenticated as any);
 
 /**
  * @swagger
@@ -91,7 +92,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunc
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/",  ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUsers(req, res);
 }));
 

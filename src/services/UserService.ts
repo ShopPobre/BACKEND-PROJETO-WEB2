@@ -41,7 +41,8 @@ export class UserService {
             email: validateData.email,
             passwordHash,
             cpf: validateData.cpf,
-            telefone: validateData.telefone
+            telefone: validateData.telefone,
+            role: 'USER'
         });
      }
 

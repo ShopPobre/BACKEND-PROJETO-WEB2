@@ -1,5 +1,3 @@
-import jwtConfig from '../config/jwt';
-import jwt from "jsonwebtoken";
 import { AuthRequestDTO } from '../dto/AuthDTO';
 import { NotFoundError, UnauthorizedError } from '../errors/AppError';
 import { IHashingService } from '../interfaces/hashing/IHashingService';
@@ -8,6 +6,7 @@ import {
     validateWithZod,
     loginSchema 
 } from '../schemas/authSchema';
+import { generateToken } from '../utils/auth';
 
 
 
@@ -33,18 +32,7 @@ export class AuthService {
         }
 
         //ADD ROLE
-        const accessToken = jwt.sign(
-            {
-                sub: user.id,
-                name: user.name
-            },
-            jwtConfig.secret as string,
-            {
-                audience: jwtConfig.audience,
-                issuer: jwtConfig.issuer,
-                expiresIn: jwtConfig.jwtTtl
-            }
-        );
+        const accessToken = generateToken(user.id, user.name, user.role);
 
         return accessToken;
     }
