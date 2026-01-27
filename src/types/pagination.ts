@@ -37,7 +37,7 @@ export interface QueryParams extends PaginationParams, SortParams {
  */
 export function normalizePaginationParams(params: PaginationParams): { page: number; limit: number; offset: number } {
     const page = Math.max(1, Number(params.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(params.limit) || 10)); // Máximo 100 itens por página
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 10));
     const offset = (page - 1) * limit;
 
     return { page, limit, offset };
