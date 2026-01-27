@@ -13,6 +13,7 @@ import orderRoutes from "./routes/orderRoutes";
 import authRoutes from "./routes/authRoutes";
 // Import models to establish relationships
 import "./models/index";
+import { ensureAdminExists } from "./config/ensureAdmin";
 
 dotenv.config();
 
@@ -82,10 +83,12 @@ const startServer = async () => {
             console.log("✅ Modelos sincronizados com o banco de dados.");
         }
 
+        await ensureAdminExists();
+
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
-            console.log(`📍 AUTH API: http://localhost:${PORT}/api/auth`);
+            console.log(`📍 AUTH API: http://localhost:${PORT}/api/login`);
             console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
             console.log(`📍 Addresses API: http://localhost:${PORT}/api/users/:userId/addresses`);
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
