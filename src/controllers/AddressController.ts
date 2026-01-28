@@ -40,12 +40,16 @@ export class AddressController {
     async getAddresses(req: Request, res: Response) {
         try {
             const userId = validateID(req.params.userId);
-            const addresses = await this.addressService.getAddresses(userId);
-            const response = AddressMapper.toDTOArray(addresses);
+            const queryParams = req.query;
+            const result = await this.addressService.getAddresses(userId, queryParams);
+            const response = {
+                data: AddressMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         }  catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao retornar os endereços", error: error.message });
         }
     }
