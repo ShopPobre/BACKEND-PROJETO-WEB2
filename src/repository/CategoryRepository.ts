@@ -1,8 +1,11 @@
 import { Category, CategoryAttributes } from "../models/Category";
 import { ICategoryRepository } from "../interfaces/ICategoryRepository";
+import { QueryParams, PaginationResult, normalizePaginationParams, normalizeSortParams, createPaginationResponse } from "../types/pagination";
+import { Op } from "sequelize";
 
 export class CategoryRepository implements ICategoryRepository {
-    private categoryModel = Category;    
+    private categoryModel = Category;
+    private readonly allowedSortFields = ['name', 'createdAt', 'updatedAt'] as const;
 
     async create(categoryData: Omit<CategoryAttributes, 'id' | 'createdAt' | 'updatedAt'>): Promise<Category> {
         try {
@@ -30,11 +33,36 @@ export class CategoryRepository implements ICategoryRepository {
         }
     }
 
-    async getAllCategories(): Promise<Category[]> {
+    async getAllCategories(queryParams?: QueryParams): Promise<PaginationResult<Category>> {
         try {
-            return await this.categoryModel.findAll({
-                order: [['name', 'ASC']]
+            const { page, limit, offset } = normalizePaginationParams(queryParams || {});
+            const { sortBy, sortOrder } = normalizeSortParams(queryParams || {}, this.allowedSortFields, 'name');
+
+            // Construir filtros
+            const where: any = {};
+
+            // Filtro por nome (busca parcial)
+            if (queryParams?.name) {
+                where.name = { [Op.like]: `%${queryParams.name}%` };
+            }
+
+            // Filtro por status ativo
+            if (queryParams?.isActive !== undefined) {
+                where.isActive = queryParams.isActive === 'true' || queryParams.isActive === true;
+            }
+
+            // Contar total
+            const total = await this.categoryModel.count({ where });
+
+            // Buscar dados paginados
+            const categories = await this.categoryModel.findAll({
+                where,
+                order: [[sortBy, sortOrder]],
+                limit,
+                offset,
             });
+
+            return createPaginationResponse(categories, total, page, limit);
         } catch (error: any) {
             throw error;
         }

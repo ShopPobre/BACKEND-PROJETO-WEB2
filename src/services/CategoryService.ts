@@ -29,12 +29,12 @@ export class CategoryService {
         });
     }
 
-    async getCategories(): Promise<Category[]> {
-        const categories = await this.categoryRepository.getAllCategories()
-        if(categories.length === 0) {
+    async getCategories(queryParams?: any) {
+        const result = await this.categoryRepository.getAllCategories(queryParams);
+        if(result.data.length === 0 && result.pagination.total === 0) {
              throw new NotFoundError('Nenhuma categoria encontrada');
         }
-        return categories;
+        return result;
     }
 
     async getCategoryById(id: number): Promise<Category> {
