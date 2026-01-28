@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { swaggerSpec } from "./config/swagger";
 import inventoryRoutes from "./routes/inventoryRoutes";
 import orderRoutes from "./routes/orderRoutes";
+import { defaultRateLimiter } from "./middleware/rateLimiter";
 // Import models to establish relationships
 import "./models/index";
 
@@ -21,6 +22,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Rate Limiting - aplicar globalmente
+app.use(defaultRateLimiter.middleware());
 
 /**
  * @swagger
