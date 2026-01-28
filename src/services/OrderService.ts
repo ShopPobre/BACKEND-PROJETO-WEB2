@@ -120,10 +120,12 @@ export class OrderService {
         }
     }
 
-    async getOrders(): Promise<Order[]> {
-        // Este método pode ser usado apenas por admin
-        // Por enquanto retorna vazio ou pode ser implementado depois
-        throw new NotFoundError('Método não implementado. Use getOrdersByUserId para buscar pedidos de um usuário específico');
+    async getOrders(queryParams?: any) {
+        const result = await this.orderRepository.getAllOrders(queryParams);
+        if(result.data.length === 0 && result.pagination.total === 0) {
+            throw new NotFoundError('Nenhum pedido encontrado');
+        }
+        return result;
     }
 
     async getOrderById(id: number): Promise<Order> {
@@ -137,7 +139,7 @@ export class OrderService {
         return order;
     }
 
-    async getOrdersByUserId(userId: string): Promise<Order[]> {
+    async getOrdersByUserId(userId: string, queryParams?: any) {
         const validatedUserId = validateID(userId);
         
         // Verificar se o usuário existe
@@ -146,12 +148,12 @@ export class OrderService {
             throw new NotFoundError('Usuário não encontrado');
         }
 
-        const orders = await this.orderRepository.findByUserId(validatedUserId);
-        if (orders.length === 0) {
+        const result = await this.orderRepository.findByUserId(validatedUserId, queryParams);
+        if (result.data.length === 0 && result.pagination.total === 0) {
             throw new NotFoundError('Nenhum pedido encontrado para este usuário');
         }
 
-        return orders;
+        return result;
     }
 
     async updateOrder(id: number, orderData: UpdateOrderDTO): Promise<Order> {

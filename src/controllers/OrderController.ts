@@ -23,8 +23,12 @@ export class OrderController {
 
     async getOrders(req: Request, res: Response) {
         try {
-            const orders = await this.orderService.getOrders();
-            const response = OrderMapper.toDTOArray(orders);
+            const queryParams = req.query;
+            const result = await this.orderService.getOrders(queryParams);
+            const response = {
+                data: OrderMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         } catch (error: any) {
             return res
@@ -49,8 +53,12 @@ export class OrderController {
     async getOrdersByUserId(req: Request, res: Response) {
         try {
             const userId = validateID(req.params.userId);
-            const orders = await this.orderService.getOrdersByUserId(userId);
-            const response = OrderMapper.toDTOArray(orders);
+            const queryParams = req.query;
+            const result = await this.orderService.getOrdersByUserId(userId, queryParams);
+            const response = {
+                data: OrderMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         } catch (error: any) {
             return res

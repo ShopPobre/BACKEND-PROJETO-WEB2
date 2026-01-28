@@ -38,15 +38,14 @@ export class UserService {
         });
      }
 
-    async getUsers(): Promise<User[]> {
+    async getUsers(queryParams?: any) {
+        const result = await this.userRepository.getAllUsers(queryParams);
 
-        const users = await userRepository.getAllUsers();
-
-        if (users.length == 0) {
+        if (result.data.length === 0 && result.pagination.total === 0) {
             throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        return users;
+        return result;
     }
 
     async getUserByID(id: string): Promise<User> {

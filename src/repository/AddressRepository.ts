@@ -1,19 +1,55 @@
 import { IAddressRepository } from "../interfaces/IAddressRepository";
 import { Address } from "../models";
+import { QueryParams, PaginationResult, normalizePaginationParams, normalizeSortParams, createPaginationResponse } from "../types/pagination";
+import { Op } from "sequelize";
 
 export class AddressRepository implements IAddressRepository{
+    private readonly allowedSortFields = ['rua', 'cidade', 'estado', 'tipo'] as const;
 
     async create(data: any): Promise<Address> {
         const address = await Address.create(data);
         return address;
     }
 
-    async getAllAddresses(userID: string): Promise<Address[]> {
+    async getAllAddresses(userID: string, queryParams?: QueryParams): Promise<PaginationResult<Address>> {
+        const { page, limit, offset } = normalizePaginationParams(queryParams || {});
+        const { sortBy, sortOrder } = normalizeSortParams(queryParams || {}, this.allowedSortFields, 'rua');
+
+        // Construir filtros
+        const where: any = { userID };
+
+        // Filtro por cidade
+        if (queryParams?.cidade) {
+            where.cidade = { [Op.like]: `%${queryParams.cidade}%` };
+        }
+
+        // Filtro por estado
+        if (queryParams?.estado) {
+            where.estado = queryParams.estado;
+        }
+
+        // Filtro por tipo
+        if (queryParams?.tipo) {
+            where.tipo = queryParams.tipo;
+        }
+
+        // Filtro por CEP
+        if (queryParams?.cep) {
+            where.cep = { [Op.like]: `%${queryParams.cep}%` };
+        }
+
+        // Contar total
+        const total = await Address.count({ where });
+
+        // Buscar dados paginados
         const addresses = await Address.findAll({
-        where: { userID }
+            where,
+            order: [[sortBy, sortOrder]],
+            limit,
+            offset,
         });
 
-        return addresses;
+        return createPaginationResponse(addresses, total, page, limit);
     }
 
     async findByID(id: string): Promise<Address | null> {
