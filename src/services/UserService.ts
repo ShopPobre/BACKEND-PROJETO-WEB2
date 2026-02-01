@@ -9,8 +9,6 @@ import { UserRepository } from "../repository/UserRepository";
 import { UserRequestDTO } from '../dto/UserDTO';
 import { User } from '../models/User';
 
-const userRepository = new UserRepository(); 
-
 export class UserService {
 
     constructor(private userRepository: IUserRepository) {}
@@ -50,7 +48,7 @@ export class UserService {
 
     async getUserByID(id: string): Promise<User> {
         const validateId = validateID(id);
-        const user = await userRepository.findByID(validateId);
+        const user = await this.userRepository.findByID(validateId);
 
         if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
