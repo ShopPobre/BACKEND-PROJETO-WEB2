@@ -40,7 +40,7 @@ export class UserService {
 
     async getUsers(): Promise<User[]> {
 
-        const users = await userRepository.getAllUsers();
+        const users = await this.userRepository.getAllUsers();
 
         if (users.length == 0) {
             throw new NotFoundError("Nenhum usuário encontrado");
@@ -51,7 +51,7 @@ export class UserService {
 
     async getUserByID(id: string): Promise<User> {
         const validateId = validateID(id);
-        const user = await userRepository.findByID(validateId);
+        const user = await this.userRepository.findByID(validateId);
 
         if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
