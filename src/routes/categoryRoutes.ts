@@ -3,6 +3,8 @@ import { CategoryController } from "../controllers/CategoryController";
 import { CategoryService } from "../services/CategoryService";
 import { CategoryRepository } from "../repository/CategoryRepository";
 import { asyncHandler } from "../middleware/errorHandler";
+import { ensureAuthenticated } from "../middleware/authMiddleware";
+import { ensureRole } from "../middleware/ensureRole";
 
 const router = Router();
 
@@ -73,7 +75,7 @@ const categoryController = new CategoryController(categoryService);
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.createCategory(req, res);
 }));
 
@@ -113,7 +115,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunc
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.getCategories(req, res);
 }));
 
@@ -160,7 +162,7 @@ router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunct
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.getCategoryById(req, res);
 }));
 
@@ -235,7 +237,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.updateCategory(req, res);
 }));
 
@@ -261,7 +263,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *       204:
  *         description: Categoria deletada com sucesso (sem conteúdo na resposta)
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
+ *         $ref: '#/components/responses/UnauthorizedError
  *       403:
  *         $ref: '#/components/responses/ForbiddenError'
  *       404:
@@ -277,7 +279,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.delete("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.deleteCategory(req, res);
 }));
 

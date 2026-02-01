@@ -22,7 +22,6 @@ export async function ensureAuthenticated(req: Request, res: Response, next: Nex
 
 export function extractTokenFromHeader(req: Request): string | undefined {
     const authorization = req.headers?.authorization;
-    console.log(authorization)
 
     if (!authorization || typeof authorization !== 'string') {
         return;

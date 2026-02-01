@@ -4,6 +4,8 @@ import { InventoryRepository } from "../repository/InventoryRepository";
 import { InventoryService } from "../services/InventoryService";
 import { ProductRepository } from "../repository/ProductRepository";
 import { InventoryController } from "../controllers/InventoryController";
+import { ensureAuthenticated } from "../middleware/authMiddleware";
+import { ensureRole } from "../middleware/ensureRole";
 
 
 const router = Router({ mergeParams: true }); 
@@ -12,6 +14,9 @@ const productRepository = new ProductRepository();
 const inventoryRepository = new InventoryRepository();
 const inventoryService = new InventoryService(inventoryRepository,productRepository);
 const inventoryController = new InventoryController(inventoryService);
+
+router.use(ensureAuthenticated);
+router.use(ensureRole("ADMIN"));
 
 /**
  * @swagger

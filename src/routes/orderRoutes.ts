@@ -8,6 +8,8 @@ import { AddressRepository } from "../repository/AddressRepository";
 import { ProductRepository } from "../repository/ProductRepository";
 import { InventoryRepository } from "../repository/InventoryRepository";
 import { asyncHandler } from "../middleware/errorHandler";
+import { ensureAuthenticated } from "../middleware/authMiddleware";
+import { ensureRole } from "../middleware/ensureRole";
 
 const router = Router();
 
@@ -90,7 +92,7 @@ const orderController = new OrderController(orderService);
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", ensureAuthenticated, ensureRole("USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.createOrder(req, res);
 }));
 
@@ -130,7 +132,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunc
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.getOrderById(req, res);
 }));
 
@@ -172,7 +174,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/user/:userId", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/user/:userId", ensureAuthenticated, ensureRole("USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.getOrdersByUserId(req, res);
 }));
 
@@ -241,7 +243,7 @@ router.get("/user/:userId", asyncHandler(async (req: Request, res: Response, nex
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.updateOrder(req, res);
 }));
 
@@ -281,7 +283,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.delete("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.deleteOrder(req, res);
 }));
 

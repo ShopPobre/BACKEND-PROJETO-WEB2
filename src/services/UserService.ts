@@ -76,7 +76,7 @@ export class UserService {
          if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
         }
-
+        
         if(validateData?.cpf) {
             const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
             if(existingCPF){

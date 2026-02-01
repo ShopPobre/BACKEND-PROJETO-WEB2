@@ -15,7 +15,6 @@ const hashingService = new BcryptService();
 const userService = new UserService(userRepository, hashingService);
 const userController = new UserController(userService);
 
-//router.use(ensureAuthenticated as any);
 
 /**
  * @swagger
@@ -132,7 +131,7 @@ router.get("/",  ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (r
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUserByID(req, res);
 }));
 
@@ -194,7 +193,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.updateUser(req, res);
 }));
 
@@ -230,7 +229,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.delete("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res);
 }));
 
