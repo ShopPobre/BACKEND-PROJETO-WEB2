@@ -1,7 +1,7 @@
 import { UserMapper } from './../mappers/UserMapper';
 import { UserService } from './../services/UserService';
 import { Request, Response } from "express"
-import { UserRequestDTO } from '../dto/UserDTO';
+import { UserRequestDTO, UserUpdateRequestDTO } from '../dto/UserDTO';
 import { validateID } from '../schemas/userSchema';
 
 export class UserController {
@@ -24,13 +24,17 @@ export class UserController {
 
     async getUsers(req: Request, res: Response) {
         try {
-            const users = await this.userService.getUsers();
-            const response = UserMapper.toDTOArray(users);
+            const queryParams = req.query;
+            const result = await this.userService.getUsers(queryParams);
+            const response = {
+                data: UserMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         } catch (error: any) {
             console.error(error);
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao retornar os usuários", error: error.message });
         }
     }
@@ -53,7 +57,7 @@ export class UserController {
     async updateUser(req: Request, res: Response) {
         try {
             const id = validateID(req.params.id);
-            const userData: UserRequestDTO = req.body;
+            const userData: UserUpdateRequestDTO = req.body;
             const user = await this.userService.updateUserByID(id, userData);
             const response = UserMapper.toDTO(user);
             return res.status(200).json(response);

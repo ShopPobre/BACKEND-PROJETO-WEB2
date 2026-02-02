@@ -1,7 +1,10 @@
 import { IUserRepository } from './../interfaces/IUserRepository';
 import { User } from "../models/User";
+import { QueryParams, PaginationResult, normalizePaginationParams, normalizeSortParams, createPaginationResponse } from "../types/pagination";
+import { Op } from "sequelize";
 
 export class UserRepository implements IUserRepository {
+  private readonly allowedSortFields = ['name', 'email', 'cpf', 'telefone'] as const;
 
   async create(userData: any) {
     try {
@@ -16,9 +19,41 @@ export class UserRepository implements IUserRepository {
 
   }
 
-  async getAllUsers() {
+  async getAllUsers(queryParams?: QueryParams): Promise<PaginationResult<User>> {
     try {
-      return await User.findAll()
+      const { page, limit, offset } = normalizePaginationParams(queryParams || {});
+      const { sortBy, sortOrder } = normalizeSortParams(queryParams || {}, this.allowedSortFields, 'name');
+
+      // Construir filtros
+      const where: any = {};
+
+      // Filtro por nome (busca parcial)
+      if (queryParams?.name) {
+        where.name = { [Op.like]: `%${queryParams.name}%` };
+      }
+
+      // Filtro por email (busca parcial)
+      if (queryParams?.email) {
+        where.email = { [Op.like]: `%${queryParams.email}%` };
+      }
+
+      // Filtro por CPF (busca parcial)
+      if (queryParams?.cpf) {
+        where.cpf = { [Op.like]: `%${queryParams.cpf}%` };
+      }
+
+      // Contar total
+      const total = await User.count({ where });
+
+      // Buscar dados paginados
+      const users = await User.findAll({
+        where,
+        order: [[sortBy, sortOrder]],
+        limit,
+        offset,
+      });
+
+      return createPaginationResponse(users, total, page, limit);
     } catch (error: any){
       throw error;
     }

@@ -9,7 +9,7 @@ export const idParamSchema = z.string().uuid({
 const MIN_PASSWORD_LENGTH = 6;
 const CPF_LENGTH = 11;
 
-export const createUpdateUserSchema = z.object({
+export const createUserSchema = z.object({
     name: z
         .string({ message: "O nome é um campo obrigatório." })
         .min(1, { message: "O nome é um campo obrigatório." }),
@@ -38,6 +38,21 @@ export const createUpdateUserSchema = z.object({
         )
 });
 
+
+export const updateUserSchema = z.object({
+    name: z.string().min(1).optional(),
+    email: z.string().email().optional(),
+    password: z.string().min(MIN_PASSWORD_LENGTH).optional(),
+    cpf: z.string().length(CPF_LENGTH).optional(),
+    telefone: z
+        .string()
+        .refine(
+            (value) =>
+                /^(\+?55)?\s?(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})-?\d{4}$/.test(value),
+            { message: "O telefone deve ser válido no formato brasileiro." }
+        )
+        .optional(),
+});
 
 
 export function validateID(id: unknown): string {

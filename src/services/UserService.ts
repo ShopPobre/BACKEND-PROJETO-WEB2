@@ -1,23 +1,26 @@
 import { ConflictError, NotFoundError } from './../errors/AppError';
 import { 
-    createUpdateUserSchema,
+    updateUserSchema,
+    createUserSchema,
     validateID,
     validateWithZod
 } from './../schemas/userSchema';
 import { IUserRepository } from './../interfaces/IUserRepository';
 import { UserRepository } from "../repository/UserRepository";
-import { UserRequestDTO } from '../dto/UserDTO';
+import { UserRequestDTO, UserUpdateRequestDTO } from '../dto/UserDTO';
 import { User } from '../models/User';
-
-const userRepository = new UserRepository(); 
+import { IHashingService } from '../interfaces/hashing/IHashingService';
 
 export class UserService {
 
-    constructor(private userRepository: IUserRepository) {}
+    constructor(
+        private userRepository: IUserRepository,
+        private hashingService: IHashingService
+    ) {}
 
     async createUser(data: UserRequestDTO): Promise<User> {
 
-        const validateData = validateWithZod(createUpdateUserSchema, data);
+        const validateData = validateWithZod(createUserSchema, data);
         
         const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
         if (existingCPF) {
@@ -29,29 +32,31 @@ export class UserService {
             throw new ConflictError('Usuario com este email já existe');
         }
 
+        const passwordHash = await this.hashingService.hash(validateData.password);
+
         return await this.userRepository.create({
             name: validateData.name,
             email: validateData.email,
-            password: validateData.password,
+            passwordHash,
             cpf: validateData.cpf,
-            telefone: validateData.telefone
+            telefone: validateData.telefone,
+            role: 'USER'
         });
      }
 
-    async getUsers(): Promise<User[]> {
+    async getUsers(queryParams?: any) {
+        const result = await this.userRepository.getAllUsers(queryParams);
 
-        const users = await userRepository.getAllUsers();
-
-        if (users.length == 0) {
+        if (result.data.length === 0 && result.pagination.total === 0) {
             throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        return users;
+        return result;
     }
 
     async getUserByID(id: string): Promise<User> {
         const validateId = validateID(id);
-        const user = await userRepository.findByID(validateId);
+        const user = await this.userRepository.findByID(validateId);
 
         if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
@@ -60,30 +65,45 @@ export class UserService {
         return user;
     }
 
-    async updateUserByID(id: string, data: UserRequestDTO): Promise<User> {
+    async updateUserByID(id: string, data: UserUpdateRequestDTO): Promise<User> {
         const validateId = validateID(id);
-        const validateData = validateWithZod(createUpdateUserSchema, data);
+        const validateData = validateWithZod(updateUserSchema, data);
         
         const user = await this.userRepository.findByID(validateId);
          if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
         }
-
-        const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
-        if(existingCPF){
-            if(existingCPF.id !== validateId) {
-                throw new ConflictError('Usuario com este cpf já existe');
+        
+        if(validateData?.cpf) {
+            const existingCPF = await this.userRepository.findByCpf(validateData.cpf);
+            if(existingCPF){
+                if(existingCPF.id !== validateId) {
+                    throw new ConflictError('Usuario com este cpf já existe');
+                }
             }
-        } 
+        }
 
-        const existingEmail = await this.userRepository.findByEmail(validateData.email);
-        if(existingEmail){
-            if(existingEmail.id !== validateId) {
-                throw new ConflictError('Usuario com este email já existe');
-            }
-        } 
+        if(validateData?.email){
+            const existingEmail = await this.userRepository.findByEmail(validateData.email);
+            if(existingEmail){
+                if(existingEmail.id !== validateId) {
+                    throw new ConflictError('Usuario com este email já existe');
+                }
+            } 
+        }
 
-        const updateUser = await this.userRepository.update(validateId, validateData);
+        if (validateData?.password){
+            const passwordHash = await this.hashingService.hash(validateData.password);
+            validateData.password = passwordHash;
+        }
+
+        const updateUser = await this.userRepository.update(validateId, {
+            name: validateData?.name,
+            email: validateData?.email,
+            passwordHash: validateData?.password,
+            cpf: validateData?.cpf,
+            telefone: validateData?.telefone
+        });
 
         if(!updateUser) {
             throw new NotFoundError('Erro ao atualizar usuario');

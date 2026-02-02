@@ -4,6 +4,8 @@ import { AddressController } from "../controllers/AddressController";
 import { UserRepository } from "../repository/UserRepository";
 import { asyncHandler } from "../middleware/errorHandler";
 import { Request, Response, NextFunction, Router } from "express"
+import { ensureAuthenticated } from "../middleware/authMiddleware";
+import { ensureRole } from "../middleware/ensureRole";
 
 
 const router = Router({ mergeParams: true }); 
@@ -12,6 +14,9 @@ const userRepository = new UserRepository();
 const addressRepository = new AddressRepository();
 const addressService = new AddressService(addressRepository, userRepository);
 const addressController = new AddressController(addressService);
+
+router.use(ensureAuthenticated);
+router.use(ensureRole("USER"));
 
 /**
  * @swagger

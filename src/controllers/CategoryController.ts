@@ -22,12 +22,16 @@ export class CategoryController {
 
     async getCategories(req: Request, res: Response) {
         try {
-            const categories = await this.categoryService.getCategories();
-            const response = CategoryMapper.toDTOArray(categories);
+            const queryParams = req.query;
+            const result = await this.categoryService.getCategories(queryParams);
+            const response = {
+                data: CategoryMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         } catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao buscar categorias", error: error.message });
         }
     }
