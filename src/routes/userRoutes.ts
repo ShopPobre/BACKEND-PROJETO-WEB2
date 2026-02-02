@@ -3,12 +3,18 @@ import { UserService } from './../services/UserService';
 import { UserRepository } from './../repository/UserRepository';
 import { asyncHandler } from "../middleware/errorHandler";
 import { Request, Response, NextFunction, Router } from "express"
+import { BcryptService } from '../services/hashing/BcryptService';
+import { ensureAuthenticated } from '../middleware/authMiddleware';
+import { ensureRole } from '../middleware/ensureRole';
+
 
 const router = Router();
 
 const userRepository = new UserRepository();
-const userService = new UserService(userRepository);
+const hashingService = new BcryptService();
+const userService = new UserService(userRepository, hashingService);
 const userController = new UserController(userService);
+
 
 /**
  * @swagger
@@ -85,7 +91,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunc
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/",  ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUsers(req, res);
 }));
 
@@ -125,7 +131,7 @@ router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunct
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUserByID(req, res);
 }));
 
@@ -187,7 +193,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.updateUser(req, res);
 }));
 
@@ -223,7 +229,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.delete("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res);
 }));
 

@@ -6,6 +6,8 @@ import { CategoryRepository } from "../repository/CategoryRepository";
 import { asyncHandler } from "../middleware/errorHandler";
 import { InventoryService } from "../services/InventoryService";
 import { InventoryRepository } from "../repository/InventoryRepository";
+import { ensureAuthenticated } from "../middleware/authMiddleware";
+import { ensureRole } from "../middleware/ensureRole";
 
 const router = Router();
 
@@ -91,7 +93,7 @@ const productController = new ProductController(productService);
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.post("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.createProduct(req, res);
 }));
 
@@ -135,7 +137,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response, next: NextFunc
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProducts(req, res);
 }));
 
@@ -184,7 +186,7 @@ router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunct
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProductById(req, res);
 }));
 
@@ -226,7 +228,7 @@ router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/category/:categoryId", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/category/:categoryId", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProductsByCategory(req, res);
 }));
 
@@ -303,7 +305,7 @@ router.get("/category/:categoryId", asyncHandler(async (req: Request, res: Respo
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.put("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.updateProduct(req, res);
 }));
 
@@ -345,7 +347,7 @@ router.put("/:id", asyncHandler(async (req: Request, res: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.delete("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.delete("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.deleteProduct(req, res);
 }));
 
