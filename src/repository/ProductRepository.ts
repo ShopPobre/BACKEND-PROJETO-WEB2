@@ -1,8 +1,11 @@
 import { Product, ProductAttributes } from "../models/Product";
 import { IProductRepository } from "../interfaces/IProductRepository";
+import { QueryParams, PaginationResult, normalizePaginationParams, normalizeSortParams, createPaginationResponse } from "../types/pagination";
+import { Op } from "sequelize";
 
 export class ProductRepository implements IProductRepository {
-    private productModel = Product;    
+    private productModel = Product;
+    private readonly allowedSortFields = ['name', 'price', 'createdAt', 'updatedAt'] as const;
 
     async create(productData: Omit<ProductAttributes, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
         try {
@@ -30,22 +33,96 @@ export class ProductRepository implements IProductRepository {
         }
     }
 
-    async findByCategoryId(categoryId: number): Promise<Product[]> {
+    async findByCategoryId(categoryId: number, queryParams?: QueryParams): Promise<PaginationResult<Product>> {
         try {
-            return await this.productModel.findAll({
-                where: { categoryId },
-                order: [['name', 'ASC']]
+            const { page, limit, offset } = normalizePaginationParams(queryParams || {});
+            const { sortBy, sortOrder } = normalizeSortParams(queryParams || {}, this.allowedSortFields, 'name');
+
+            // Construir filtros
+            const where: any = { categoryId };
+
+            // Filtro por nome (busca parcial)
+            if (queryParams?.name) {
+                where.name = { [Op.like]: `%${queryParams.name}%` };
+            }
+
+            // Filtro por preço mínimo
+            if (queryParams?.minPrice) {
+                where.price = { ...where.price, [Op.gte]: Number(queryParams.minPrice) };
+            }
+
+            // Filtro por preço máximo
+            if (queryParams?.maxPrice) {
+                where.price = { ...where.price, [Op.lte]: Number(queryParams.maxPrice) };
+            }
+
+            // Filtro por status ativo
+            if (queryParams?.isActive !== undefined) {
+                where.isActive = queryParams.isActive === 'true' || queryParams.isActive === true;
+            }
+
+            // Contar total
+            const total = await this.productModel.count({ where });
+
+            // Buscar dados paginados
+            const products = await this.productModel.findAll({
+                where,
+                order: [[sortBy, sortOrder]],
+                limit,
+                offset,
             });
+
+            return createPaginationResponse(products, total, page, limit);
         } catch (error: any) {
             throw error;
         }
     }
 
-    async getAllProducts(): Promise<Product[]> {
+    async getAllProducts(queryParams?: QueryParams): Promise<PaginationResult<Product>> {
         try {
-            return await this.productModel.findAll({
-                order: [['name', 'ASC']]
+            const { page, limit, offset } = normalizePaginationParams(queryParams || {});
+            const { sortBy, sortOrder } = normalizeSortParams(queryParams || {}, this.allowedSortFields, 'name');
+
+            // Construir filtros
+            const where: any = {};
+
+            // Filtro por nome (busca parcial)
+            if (queryParams?.name) {
+                where.name = { [Op.like]: `%${queryParams.name}%` };
+            }
+
+            // Filtro por categoria
+            if (queryParams?.categoryId) {
+                where.categoryId = Number(queryParams.categoryId);
+            }
+
+            // Filtro por preço mínimo
+            if (queryParams?.minPrice) {
+                where.price = { ...where.price, [Op.gte]: Number(queryParams.minPrice) };
+            }
+
+            // Filtro por preço máximo
+            if (queryParams?.maxPrice) {
+                where.price = { ...where.price, [Op.lte]: Number(queryParams.maxPrice) };
+            }
+
+            // Filtro por status ativo
+            if (queryParams?.isActive !== undefined) {
+                where.isActive = queryParams.isActive === 'true' || queryParams.isActive === true;
+            }
+
+            // Contar total
+            const total = await this.productModel.count({ where });
+
+            // Buscar dados paginados
+            const products = await this.productModel.findAll({
+                where,
+                order: [[sortBy, sortOrder]],
+                limit,
+                offset,
             });
+
+            return createPaginationResponse(products, total, page, limit);
         } catch (error: any) {
             throw error;
         }

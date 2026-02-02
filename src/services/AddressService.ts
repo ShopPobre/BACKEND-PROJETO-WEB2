@@ -33,20 +33,20 @@ export class AddressService {
                 userID: validateId
         });
     }
-    async getAddresses(userID: string): Promise<Address[]>{
+    async getAddresses(userID: string, queryParams?: any){
         const validateId = validateID(userID);
         const user = await this.userRepository.findByID(validateId);
          if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        const addresses = await this.addressRepository.getAllAddresses(user.id);
+        const result = await this.addressRepository.getAllAddresses(validateId, queryParams);
 
-        if(!addresses){
+        if(result.data.length === 0 && result.pagination.total === 0){
              throw new NotFoundError("Nenhum endereço encontrado");
         }
 
-        return addresses;
+        return result;
     }
     async updateAddress(userID: string, addressID: string, data: AddressRequestDTO): Promise<Address> {
         const validateUserId = validateID(userID);

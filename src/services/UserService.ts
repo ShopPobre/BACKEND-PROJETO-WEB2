@@ -11,8 +11,6 @@ import { UserRequestDTO, UserUpdateRequestDTO } from '../dto/UserDTO';
 import { User } from '../models/User';
 import { IHashingService } from '../interfaces/hashing/IHashingService';
 
-const userRepository = new UserRepository(); 
-
 export class UserService {
 
     constructor(
@@ -46,20 +44,19 @@ export class UserService {
         });
      }
 
-    async getUsers(): Promise<User[]> {
+    async getUsers(queryParams?: any) {
+        const result = await this.userRepository.getAllUsers(queryParams);
 
-        const users = await userRepository.getAllUsers();
-
-        if (users.length == 0) {
+        if (result.data.length === 0 && result.pagination.total === 0) {
             throw new NotFoundError("Nenhum usuário encontrado");
         }
 
-        return users;
+        return result;
     }
 
     async getUserByID(id: string): Promise<User> {
         const validateId = validateID(id);
-        const user = await userRepository.findByID(validateId);
+        const user = await this.userRepository.findByID(validateId);
 
         if(!user){
             throw new NotFoundError("Nenhum usuário encontrado");

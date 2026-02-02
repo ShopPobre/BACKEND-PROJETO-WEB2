@@ -47,12 +47,12 @@ export class ProductService {
         return product;
     }
 
-    async getProducts(): Promise<Product[]> {
-        const products = await this.productRepository.getAllProducts();
-        if (products.length === 0) {
+    async getProducts(queryParams?: any) {
+        const result = await this.productRepository.getAllProducts(queryParams);
+        if (result.data.length === 0 && result.pagination.total === 0) {
              throw new NotFoundError('Nenhuma produto encontrado');
         }
-        return products;
+        return result;
     }
 
     async getProductById(id: number): Promise<Product> {
@@ -66,7 +66,7 @@ export class ProductService {
         return product;
     }
 
-    async getProductsByCategory(categoryId: number): Promise<Product[]> {
+    async getProductsByCategory(categoryId: number, queryParams?: any) {
         const validatedCategoryId = validateId(categoryId);
         
         // Verificar se a categoria existe
@@ -75,7 +75,7 @@ export class ProductService {
             throw new NotFoundError('Categoria não encontrada');
         }
 
-        return await this.productRepository.findByCategoryId(validatedCategoryId);
+        return await this.productRepository.findByCategoryId(validatedCategoryId, queryParams);
     }
 
     async updateProductById(id: number, productData: UpdateProductDTO): Promise<Product> {

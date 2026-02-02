@@ -24,13 +24,17 @@ export class UserController {
 
     async getUsers(req: Request, res: Response) {
         try {
-            const users = await this.userService.getUsers();
-            const response = UserMapper.toDTOArray(users);
+            const queryParams = req.query;
+            const result = await this.userService.getUsers(queryParams);
+            const response = {
+                data: UserMapper.toDTOArray(result.data),
+                pagination: result.pagination
+            };
             return res.status(200).json(response);
         } catch (error: any) {
             console.error(error);
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao retornar os usuários", error: error.message });
         }
     }
