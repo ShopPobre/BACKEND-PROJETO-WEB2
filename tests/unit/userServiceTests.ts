@@ -3,11 +3,11 @@ const { UserService } = require("../../src/services/UserService");
 const { ConflictError, NotFoundError } = require("../../src/errors/AppError");
 
 describe("UserService", () => {
-
   let userRepositoryMock: any;
   let userService: any;
 
   const validUUID = "550e8400-e29b-41d4-a716-446655440000";
+  const anotherUUID = "660e8400-e29b-41d4-a716-446655440001";
 
   const fakeUser = {
     id: validUUID,
@@ -15,6 +15,82 @@ describe("UserService", () => {
     email: "joao@email.com",
     cpf: "12345678900",
     telefone: "999999999"
+  };
+
+  const fakeUser2 = {
+    id: anotherUUID,
+    name: "Maria",
+    email: "maria@email.com",
+    cpf: "98765432100",
+    telefone: "888888888"
+  };
+
+  const mockConfigurations = {
+    mockCreateSuccess: () => {
+      userRepositoryMock.findByCpf = async () => null;
+      userRepositoryMock.findByEmail = async () => null;
+      userRepositoryMock.create = async () => fakeUser;
+    },
+
+    mockCpfConflict: () => {
+      userRepositoryMock.findByCpf = async () => fakeUser;
+      userRepositoryMock.findByEmail = async () => null;
+    },
+
+    mockEmailConflict: () => {
+      userRepositoryMock.findByCpf = async () => null;
+      userRepositoryMock.findByEmail = async () => fakeUser;
+    },
+
+    mockGetUsersSuccess: () => {
+      userRepositoryMock.getAllUsers = async () => ({
+        data: [fakeUser],
+        pagination: { total: 1 }
+      });
+    },
+
+    mockGetUsersEmpty: () => {
+      userRepositoryMock.getAllUsers = async () => ({
+        data: [],
+        pagination: { total: 0 }
+      });
+    },
+
+    mockGetUserByIdSuccess: () => {
+      userRepositoryMock.findByID = async () => fakeUser;
+    },
+
+    mockGetUserByIdNotFound: () => {
+      userRepositoryMock.findByID = async () => null;
+    },
+
+    mockUpdateSuccess: () => {
+      userRepositoryMock.findByID = async () => fakeUser;
+      userRepositoryMock.findByCpf = async () => null;
+      userRepositoryMock.findByEmail = async () => null;
+      userRepositoryMock.update = async () => fakeUser;
+    },
+
+    mockUpdateCpfConflict: () => {
+      userRepositoryMock.findByID = async () => ({ 
+        ...fakeUser, 
+        cpf: "11111111111" // CPF original diferente
+      });
+      userRepositoryMock.findByCpf = async (cpf: string) => {
+        if (cpf === "12345678900") return fakeUser2; // Retorna outro usuário com mesmo CPF
+        return null;
+      };
+      userRepositoryMock.findByEmail = async () => null;
+    },
+
+    mockDeleteSuccess: () => {
+      userRepositoryMock.findByID = async () => fakeUser;
+      userRepositoryMock.delete = async () => true;
+    },
+
+    mockDeleteNotFound: () => {
+      userRepositoryMock.findByID = async () => null;
+    }
   };
 
   beforeEach(() => {
@@ -25,12 +101,9 @@ describe("UserService", () => {
       findByID: async () => fakeUser,
       update: async () => fakeUser,
       delete: async () => true,
-
       getAllUsers: async () => ({
         data: [fakeUser],
-        pagination: {
-          total: 1
-        }
+        pagination: { total: 1 }
       })
     };
 
@@ -38,6 +111,8 @@ describe("UserService", () => {
   });
 
   it("deve criar um usuário com sucesso", async () => {
+    mockConfigurations.mockCreateSuccess();
+    
     const result = await userService.createUser({
       name: "João",
       email: "joao@email.com",
@@ -50,7 +125,7 @@ describe("UserService", () => {
   });
 
   it("deve lançar erro se CPF já existir", async () => {
-    userRepositoryMock.findByCpf = async () => fakeUser;
+    mockConfigurations.mockCpfConflict();
 
     try {
       await userService.createUser({
@@ -67,7 +142,7 @@ describe("UserService", () => {
   });
 
   it("deve lançar erro se email já existir", async () => {
-    userRepositoryMock.findByEmail = async () => fakeUser;
+    mockConfigurations.mockEmailConflict();
 
     try {
       await userService.createUser({
@@ -84,6 +159,8 @@ describe("UserService", () => {
   });
 
   it("deve retornar lista de usuários", async () => {
+    mockConfigurations.mockGetUsersSuccess();
+
     const result = await userService.getUsers();
 
     expect(result).to.have.property("data");
@@ -92,10 +169,7 @@ describe("UserService", () => {
   });
 
   it("deve lançar erro se não houver usuários", async () => {
-    userRepositoryMock.getAllUsers = async () => ({
-      data: [],
-      pagination: { total: 0 }
-    });
+    mockConfigurations.mockGetUsersEmpty();
 
     try {
       await userService.getUsers();
@@ -106,12 +180,14 @@ describe("UserService", () => {
   });
 
   it("deve retornar usuário por ID", async () => {
+    mockConfigurations.mockGetUserByIdSuccess();
+
     const user = await userService.getUserByID(validUUID);
     expect(user).to.deep.equal(fakeUser);
   });
 
   it("deve lançar erro se usuário não existir", async () => {
-    userRepositoryMock.findByID = async () => null;
+    mockConfigurations.mockGetUserByIdNotFound();
 
     try {
       await userService.getUserByID(validUUID);
@@ -122,6 +198,8 @@ describe("UserService", () => {
   });
 
   it("deve atualizar usuário com sucesso", async () => {
+    mockConfigurations.mockUpdateSuccess();
+
     const updated = await userService.updateUserByID(validUUID, {
       name: "João Atualizado",
       email: "joao@email.com",
@@ -133,13 +211,32 @@ describe("UserService", () => {
     expect(updated).to.deep.equal(fakeUser);
   });
 
+  it("deve lançar erro ao atualizar usuário com cpf existente", async () => {
+    mockConfigurations.mockUpdateCpfConflict();
+
+    try {
+      await userService.updateUserByID(validUUID, {
+        name: "João Atualizado",
+        email: "joao1@email.com",
+        password: "123456",
+        cpf: "12345678900", // Tenta mudar para CPF que já existe
+        telefone: "999999999"
+      });
+      throw new Error("Teste falhou");
+    } catch (error: any) {
+      expect(error).to.be.instanceOf(ConflictError);
+    }
+  });
+
   it("deve deletar usuário com sucesso", async () => {
+    mockConfigurations.mockDeleteSuccess();
+
     const result = await userService.deleteUser(validUUID);
     expect(result.message).to.equal("Usuário deletado com sucesso");
   });
 
   it("deve lançar erro ao deletar usuário inexistente", async () => {
-    userRepositoryMock.findByID = async () => null;
+    mockConfigurations.mockDeleteNotFound();
 
     try {
       await userService.deleteUser(validUUID);
@@ -148,5 +245,4 @@ describe("UserService", () => {
       expect(error).to.be.instanceOf(NotFoundError);
     }
   });
-
 });
