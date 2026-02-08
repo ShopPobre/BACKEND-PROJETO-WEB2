@@ -392,8 +392,34 @@ Após iniciar o servidor, você verá no console as seguintes URLs disponíveis:
 | `npm run dev` | Inicia o servidor em modo desenvolvimento com hot-reload |
 
 ---
+## 5.📋 Planilha de Test Cases
 
-## 5. 📝 **Notas Importantes**
+Este projeto utiliza uma **planilha de Test Cases** para documentar e organizar os cenários de teste do sistema, garantindo a validação das funcionalidades e regras de negócio.
+
+**Link da planilha:** https://docs.google.com/spreadsheets/d/1W7wYSbi27qVhziQkWRDkAUsZsenHcXhseNwe-KSVda0/edit?usp=sharing
+
+Cada caso de teste descreve:
+- Funcionalidade testada
+- Pré-condições
+- Dados de entrada
+- Resultado esperado
+- Resultado obtido
+- 
+A planilha serve como base para a criação e validação dos **testes automatizados**, assegurando a qualidade do software.
+
+## ▶️ Execução dos Testes
+
+Para instalar as dependências do projeto:
+```
+npm install
+```
+
+Para execulta o testes:
+```
+npm run test:unit
+```
+
+## 6. 📝 **Notas Importantes**
 
 - **Banco de Dados**: Em modo desenvolvimento, o Sequelize sincroniza automaticamente os modelos com `force: true`, o que **apaga todos os dados** a cada reinicialização.
 
