@@ -4,6 +4,7 @@ const { ConflictError, NotFoundError } = require("../../src/errors/AppError");
 
 describe("UserService", () => {
   let userRepositoryMock: any;
+  let hashingServiceMock: any; 
   let userService: any;
 
   const validUUID = "550e8400-e29b-41d4-a716-446655440000";
@@ -14,7 +15,8 @@ describe("UserService", () => {
     name: "João",
     email: "joao@email.com",
     cpf: "12345678900",
-    telefone: "999999999"
+    telefone: "999999999",
+    role: 'USER' 
   };
 
   const fakeUser2 = {
@@ -22,7 +24,8 @@ describe("UserService", () => {
     name: "Maria",
     email: "maria@email.com",
     cpf: "98765432100",
-    telefone: "888888888"
+    telefone: "888888888",
+    role: 'USER' 
   };
 
   const mockConfigurations = {
@@ -30,16 +33,19 @@ describe("UserService", () => {
       userRepositoryMock.findByCpf = async () => null;
       userRepositoryMock.findByEmail = async () => null;
       userRepositoryMock.create = async () => fakeUser;
+      hashingServiceMock.hash = async () => 'hashed_password_123';
     },
 
     mockCpfConflict: () => {
       userRepositoryMock.findByCpf = async () => fakeUser;
       userRepositoryMock.findByEmail = async () => null;
+      hashingServiceMock.hash = async () => 'hashed_password_123';
     },
 
     mockEmailConflict: () => {
       userRepositoryMock.findByCpf = async () => null;
       userRepositoryMock.findByEmail = async () => fakeUser;
+      hashingServiceMock.hash = async () => 'hashed_password_123';
     },
 
     mockGetUsersSuccess: () => {
@@ -69,18 +75,20 @@ describe("UserService", () => {
       userRepositoryMock.findByCpf = async () => null;
       userRepositoryMock.findByEmail = async () => null;
       userRepositoryMock.update = async () => fakeUser;
+      hashingServiceMock.hash = async () => 'hashed_password_123';
     },
 
     mockUpdateCpfConflict: () => {
       userRepositoryMock.findByID = async () => ({ 
         ...fakeUser, 
-        cpf: "11111111111" // CPF original diferente
+        cpf: "11111111111" 
       });
       userRepositoryMock.findByCpf = async (cpf: string) => {
-        if (cpf === "12345678900") return fakeUser2; // Retorna outro usuário com mesmo CPF
+        if (cpf === "12345678900") return fakeUser2; 
         return null;
       };
       userRepositoryMock.findByEmail = async () => null;
+      hashingServiceMock.hash = async () => 'hashed_password_123';
     },
 
     mockDeleteSuccess: () => {
@@ -90,10 +98,25 @@ describe("UserService", () => {
 
     mockDeleteNotFound: () => {
       userRepositoryMock.findByID = async () => null;
+    },
+
+    mockUpdateWithPassword: () => {
+      userRepositoryMock.findByID = async () => fakeUser;
+      userRepositoryMock.findByCpf = async () => null;
+      userRepositoryMock.findByEmail = async () => null;
+      userRepositoryMock.update = async () => ({
+        ...fakeUser,
+        passwordHash: 'new_hashed_password'
+      });
+      hashingServiceMock.hash = async (password: string) => `hashed_${password}`;
     }
   };
 
   beforeEach(() => {
+    hashingServiceMock = {
+      hash: async (password: string) => 'hashed_password_123'
+    };
+
     userRepositoryMock = {
       findByCpf: async () => null,
       findByEmail: async () => null,
@@ -107,7 +130,7 @@ describe("UserService", () => {
       })
     };
 
-    userService = new UserService(userRepositoryMock);
+    userService = new UserService(userRepositoryMock, hashingServiceMock);
   });
 
   it("deve criar um usuário com sucesso", async () => {
@@ -138,6 +161,7 @@ describe("UserService", () => {
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(ConflictError);
+      expect(error.message).to.equal('Usuario com este cpf já existe');
     }
   });
 
@@ -155,6 +179,7 @@ describe("UserService", () => {
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(ConflictError);
+      expect(error.message).to.equal('Usuario com este email já existe');
     }
   });
 
@@ -166,6 +191,8 @@ describe("UserService", () => {
     expect(result).to.have.property("data");
     expect(result.data).to.be.an("array");
     expect(result.data.length).to.equal(1);
+    expect(result).to.have.property("pagination");
+    expect(result.pagination.total).to.equal(1);
   });
 
   it("deve lançar erro se não houver usuários", async () => {
@@ -176,6 +203,7 @@ describe("UserService", () => {
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(NotFoundError);
+      expect(error.message).to.equal("Nenhum usuário encontrado");
     }
   });
 
@@ -194,6 +222,7 @@ describe("UserService", () => {
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(NotFoundError);
+      expect(error.message).to.equal("Nenhum usuário encontrado");
     }
   });
 
@@ -219,12 +248,29 @@ describe("UserService", () => {
         name: "João Atualizado",
         email: "joao1@email.com",
         password: "123456",
-        cpf: "12345678900", // Tenta mudar para CPF que já existe
+        cpf: "12345678900",
         telefone: "999999999"
       });
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(ConflictError);
+      expect(error.message).to.equal('Usuario com este cpf já existe');
+    }
+  });
+
+  it("deve lançar erro ao atualizar usuário com email existente", async () => {
+    userRepositoryMock.findByID = async () => fakeUser;
+    userRepositoryMock.findByEmail = async () => fakeUser2; 
+    userRepositoryMock.findByCpf = async () => null;
+
+    try {
+      await userService.updateUserByID(validUUID, {
+        email: "maria@email.com" 
+      });
+      throw new Error("Teste falhou");
+    } catch (error: any) {
+      expect(error).to.be.instanceOf(ConflictError);
+      expect(error.message).to.equal('Usuario com este email já existe');
     }
   });
 
@@ -243,6 +289,37 @@ describe("UserService", () => {
       throw new Error("Teste falhou");
     } catch (error: any) {
       expect(error).to.be.instanceOf(NotFoundError);
+      expect(error.message).to.equal('Nenhum usuário encontrado');
+    }
+  });
+
+  it("deve lançar erro ao deletar usuário com falha no repositório", async () => {
+    userRepositoryMock.findByID = async () => fakeUser;
+    userRepositoryMock.delete = async () => false; 
+
+    try {
+      await userService.deleteUser(validUUID);
+      throw new Error("Teste falhou");
+    } catch (error: any) {
+      expect(error).to.be.instanceOf(NotFoundError);
+      expect(error.message).to.equal('Erro ao deletar usuario');
+    }
+  });
+
+  it("deve lançar erro ao atualizar usuário com falha no repositório", async () => {
+    userRepositoryMock.findByID = async () => fakeUser;
+    userRepositoryMock.findByCpf = async () => null;
+    userRepositoryMock.findByEmail = async () => null;
+    userRepositoryMock.update = async () => null; 
+
+    try {
+      await userService.updateUserByID(validUUID, {
+        name: "João Atualizado"
+      });
+      throw new Error("Teste falhou");
+    } catch (error: any) {
+      expect(error).to.be.instanceOf(NotFoundError);
+      expect(error.message).to.equal('Erro ao atualizar usuario');
     }
   });
 });
