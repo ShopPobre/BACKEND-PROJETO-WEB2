@@ -15,7 +15,7 @@ export class ProductService {
     constructor(
         private productRepository: IProductRepository,
         private categoryRepository: ICategoryRepository,
-        private invetoryService: InventoryService
+        private inventoryService: InventoryService
     ) {}
 
     async createProduct(data: CreateProductDTO): Promise<Product> {
@@ -42,7 +42,7 @@ export class ProductService {
             isActive: true
         });
 
-        await this.invetoryService.createInventory(product.id);
+        await this.inventoryService.createInventory(product.id);
 
         return product;
     }
@@ -146,7 +146,7 @@ export class ProductService {
         }
 
 
-        await this.invetoryService.deleteInventory(validatedId);
+        await this.inventoryService.deleteInventory(validatedId);
         const deleted = await this.productRepository.delete(validatedId);
         if (!deleted) {
             throw new NotFoundError('Erro ao deletar produto');
