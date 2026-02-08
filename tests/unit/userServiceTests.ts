@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+import { expect } from 'chai';
 const { UserService } = require("../../src/services/UserService");
 const { ConflictError, NotFoundError } = require("../../src/errors/AppError");
 
