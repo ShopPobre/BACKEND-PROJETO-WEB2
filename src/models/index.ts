@@ -4,6 +4,7 @@ import { Category } from "./Category";
 import { Product } from "./Product";
 import { Order } from "./Order";
 import { OrderItem } from "./OrderItem";
+import { Payment } from "./Payment";
 
 // User relationships
 User.hasMany(Address, {
@@ -43,6 +44,11 @@ Order.hasMany(OrderItem, {
     as: "orderItems"
 });
 
+Order.hasMany(Payment, {
+    foreignKey: "orderId",
+    as: "payments"
+});
+
 // OrderItem relationships
 OrderItem.belongsTo(Order, {
     foreignKey: "orderId",
@@ -52,6 +58,12 @@ OrderItem.belongsTo(Order, {
 OrderItem.belongsTo(Product, {
     foreignKey: "productId",
     as: "product"
+});
+
+// Payment relationships
+Payment.belongsTo(Order, {
+    foreignKey: "orderId",
+    as: "order"
 });
 
 // Category relationships
@@ -71,4 +83,4 @@ Product.hasMany(OrderItem, {
     as: "orderItems"
 });
 
-export { User, Address, Category, Product, Order, OrderItem };
+export { User, Address, Category, Product, Order, OrderItem, Payment };
