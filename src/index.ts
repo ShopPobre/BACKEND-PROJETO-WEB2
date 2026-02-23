@@ -1,5 +1,5 @@
+import "./config/env";
 import express, { Express } from "express";
-import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes";
 import addressRoutes from "./routes/addressRoutes";
 import swaggerUi from "swagger-ui-express";
@@ -15,11 +15,58 @@ import authRoutes from "./routes/authRoutes";
 // Import models to establish relationships
 import "./models/index";
 import { ensureAdminExists } from "./config/ensureAdmin";
+import paymentRoutes from "./routes/paymentRoutes";
+import { PaymentService } from "./services/PaymentService";
+import { StripeGateway } from "./services/gateways/StripeGateway";
 
-dotenv.config();
+import { PaymentRepository } from "./repository/PaymentRepository";
+import { OrderRepository } from "./repository/OrderRepository";
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
+
+app.post(
+  "/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const signature = req.headers["stripe-signature"] as string;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!signature || !webhookSecret) {
+      console.error("❌ Stripe webhook: signature ou STRIPE_WEBHOOK_SECRET ausente");
+      res.status(400).send("Webhook configuration error");
+      return;
+    }
+
+    const paymentRepository = new PaymentRepository();
+    const orderRepository = new OrderRepository();
+    const stripeGateway = new StripeGateway();
+    const paymentService = new PaymentService(
+      paymentRepository,
+      orderRepository,
+      stripeGateway
+    );
+
+    try {
+      const event = stripeGateway.constructWebhookEvent(
+        req.body,
+        signature,
+        webhookSecret
+      );
+
+      if (event.type === "payment_intent.succeeded") {
+        const paymentIntent = event.data.object as { id: string };
+        await paymentService.confirmPayment(paymentIntent.id);
+      }
+
+      res.status(200).json({ received: true });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("❌ Stripe webhook error:", message);
+      res.status(400).send(`Webhook error: ${message}`);
+    }
+  }
+);
 
 // Middleware
 app.use(express.json());
@@ -71,8 +118,11 @@ app.use("/api/products", productRoutes);
 app.use("/api/inventory/:productId", inventoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/payments", paymentRoutes);
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
+
+
 
 // Inicializar servidor
 const startServer = async () => {
@@ -98,6 +148,8 @@ const startServer = async () => {
             console.log(`📍 Categories API: http://localhost:${PORT}/api/categories`);
             console.log(`📍 Products API: http://localhost:${PORT}/api/products`);
             console.log(`📍 Orders API: http://localhost:${PORT}/api/orders`);
+            console.log(`📍 Payments API: http://localhost:${PORT}/api/payments`);
+            console.log(`📍 Stripe Webhook: http://localhost:${PORT}/webhook/stripe`);
             console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
         });
     } catch (error) {

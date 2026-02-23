@@ -263,7 +263,7 @@ router.put("/:id", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async 
  *       204:
  *         description: Categoria deletada com sucesso (sem conteúdo na resposta)
  *       401:
- *         $ref: '#/components/responses/UnauthorizedError
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       403:
  *         $ref: '#/components/responses/ForbiddenError'
  *       404:
