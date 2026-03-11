@@ -13,6 +13,8 @@ export interface UpdateProductDTO {
     isActive?: boolean;
 }
 
+import { ProductImageResponseDTO } from "./ProductImageDTO";
+
 export interface ProductResponseDTO {
     id: number;
     name: string;
@@ -20,6 +22,8 @@ export interface ProductResponseDTO {
     price: number;
     categoryId: number;
     isActive: boolean;
+    mainImage?: ProductImageResponseDTO | null;
+    images?: ProductImageResponseDTO[];
     createdAt?: Date | null;
     updatedAt?: Date | null;
 }
