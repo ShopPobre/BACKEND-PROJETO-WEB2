@@ -2,6 +2,7 @@ import { User } from "./User";
 import { Address } from "./Address";
 import { Category } from "./Category";
 import { Product } from "./Product";
+import { ProductImage } from "./ProductImage";
 import { Order } from "./Order";
 import { OrderItem } from "./OrderItem";
 import { Payment } from "./Payment";
@@ -83,4 +84,14 @@ Product.hasMany(OrderItem, {
     as: "orderItems"
 });
 
-export { User, Address, Category, Product, Order, OrderItem, Payment };
+Product.hasMany(ProductImage, {
+    foreignKey: "productId",
+    as: "images"
+});
+
+ProductImage.belongsTo(Product, {
+    foreignKey: "productId",
+    as: "product"
+});
+
+export { User, Address, Category, Product, ProductImage, Order, OrderItem, Payment };

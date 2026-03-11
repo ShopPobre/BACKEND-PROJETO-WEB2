@@ -12,6 +12,7 @@ import inventoryRoutes from "./routes/inventoryRoutes";
 import orderRoutes from "./routes/orderRoutes";
 import { defaultRateLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/authRoutes";
+import { ensureBucket } from "./config/minio";
 // Import models to establish relationships
 import "./models/index";
 import { ensureAdminExists } from "./config/ensureAdmin";
@@ -133,11 +134,12 @@ const startServer = async () => {
 
         // Sincronizar modelos (apenas em desenvolvimento)
         if (process.env.NODE_ENV !== "production") {
-            await sequelize.sync({ force: true });
+            await sequelize.sync({ alter: true });
             console.log("✅ Modelos sincronizados com o banco de dados.");
         }
 
         await ensureAdminExists();
+        await ensureBucket();
 
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);

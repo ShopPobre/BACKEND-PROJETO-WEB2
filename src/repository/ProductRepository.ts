@@ -1,4 +1,5 @@
 import { Product, ProductAttributes } from "../models/Product";
+import { ProductImage } from "../models/ProductImage";
 import { IProductRepository } from "../interfaces/IProductRepository";
 import { QueryParams, PaginationResult, normalizePaginationParams, normalizeSortParams, createPaginationResponse } from "../types/pagination";
 import { Op } from "sequelize";
@@ -28,6 +29,17 @@ export class ProductRepository implements IProductRepository {
     async findById(id: number): Promise<Product | null> {
         try {
             return await this.productModel.findByPk(id);
+        } catch (error: any) {
+            throw error;
+        }
+    }
+
+    async findByIdWithImages(id: number): Promise<Product | null> {
+        try {
+            return await this.productModel.findByPk(id, {
+                include: [{ model: ProductImage, as: "images" }],
+                order: [[{ model: ProductImage, as: "images" }, "sortOrder", "ASC"]],
+            });
         } catch (error: any) {
             throw error;
         }
@@ -65,11 +77,21 @@ export class ProductRepository implements IProductRepository {
             const total = await this.productModel.count({ where });
 
             // Buscar dados paginados
+            // Inclui somente a primeira imagem (sortOrder ASC) para servir como imagem principal no catálogo
             const products = await this.productModel.findAll({
                 where,
                 order: [[sortBy, sortOrder]],
                 limit,
                 offset,
+                include: [
+                    {
+                        model: ProductImage,
+                        as: "images",
+                        separate: true,
+                        limit: 1,
+                        order: [["sortOrder", "ASC"]],
+                    },
+                ],
             });
 
             return createPaginationResponse(products, total, page, limit);
@@ -115,11 +137,21 @@ export class ProductRepository implements IProductRepository {
             const total = await this.productModel.count({ where });
 
             // Buscar dados paginados
+            // Inclui somente a primeira imagem (sortOrder ASC) para servir como imagem principal no catálogo
             const products = await this.productModel.findAll({
                 where,
                 order: [[sortBy, sortOrder]],
                 limit,
                 offset,
+                include: [
+                    {
+                        model: ProductImage,
+                        as: "images",
+                        separate: true,
+                        limit: 1,
+                        order: [["sortOrder", "ASC"]],
+                    },
+                ],
             });
 
             return createPaginationResponse(products, total, page, limit);

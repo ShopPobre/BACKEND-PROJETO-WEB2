@@ -57,7 +57,7 @@ export class ProductService {
 
     async getProductById(id: number): Promise<Product> {
         const validatedId = validateId(id);
-        const product = await this.productRepository.findById(validatedId);
+        const product = await this.productRepository.findByIdWithImages(validatedId);
         
         if (!product) {
             throw new NotFoundError('Produto não encontrado');

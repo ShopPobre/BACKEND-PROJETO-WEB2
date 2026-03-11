@@ -1,23 +1,30 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { ProductController } from "../controllers/ProductController";
 import { ProductService } from "../services/ProductService";
+import { ProductImageService } from "../services/ProductImageService";
 import { ProductRepository } from "../repository/ProductRepository";
+import { ProductImageRepository } from "../repository/ProductImageRepository";
 import { CategoryRepository } from "../repository/CategoryRepository";
 import { asyncHandler } from "../middleware/errorHandler";
 import { InventoryService } from "../services/InventoryService";
 import { InventoryRepository } from "../repository/InventoryRepository";
+import { MinioService } from "../services/MinioService";
 import { ensureAuthenticated } from "../middleware/authMiddleware";
 import { ensureRole } from "../middleware/ensureRole";
+import { uploadProductImage } from "../config/multer";
 
 const router = Router();
 
 // Dependency Injection
 const productRepository = new ProductRepository();
+const productImageRepository = new ProductImageRepository();
 const categoryRepository = new CategoryRepository();
-const inventoryRepository = new InventoryRepository()
+const inventoryRepository = new InventoryRepository();
 const inventoryService = new InventoryService(inventoryRepository, productRepository);
 const productService = new ProductService(productRepository, categoryRepository, inventoryService);
-const productController = new ProductController(productService);
+const minioService = new MinioService();
+const productImageService = new ProductImageService(productImageRepository, minioService);
+const productController = new ProductController(productService, productImageService);
 
 /**
  * @swagger
@@ -140,6 +147,40 @@ router.post("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (r
 router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProducts(req, res);
 }));
+
+// Rotas de imagens do produto (antes de GET /:id para não capturar "images")
+router.post(
+    "/:id/images",
+    ensureAuthenticated,
+    ensureRole("ADMIN"),
+    (req: Request, res: Response, next: NextFunction) => {
+        uploadProductImage(req, res, (err: any) => {
+            if (err) {
+                return res.status(400).json({ message: err.message || "Erro no upload" });
+            }
+            next();
+        });
+    },
+    asyncHandler(async (req: Request, res: Response) => {
+        await productController.uploadProductImage(req, res);
+    })
+);
+router.get(
+    "/:id/images/:imageId/file",
+    ensureAuthenticated,
+    ensureRole("ADMIN", "USER"),
+    asyncHandler(async (req: Request, res: Response) => {
+        await productController.getProductImageFile(req, res);
+    })
+);
+router.delete(
+    "/:id/images/:imageId",
+    ensureAuthenticated,
+    ensureRole("ADMIN"),
+    asyncHandler(async (req: Request, res: Response) => {
+        await productController.deleteProductImage(req, res);
+    })
+);
 
 /**
  * @swagger
