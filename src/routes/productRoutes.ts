@@ -167,8 +167,6 @@ router.post(
 );
 router.get(
     "/:id/images/:imageId/file",
-    ensureAuthenticated,
-    ensureRole("ADMIN", "USER"),
     asyncHandler(async (req: Request, res: Response) => {
         await productController.getProductImageFile(req, res);
     })
@@ -227,7 +225,7 @@ router.delete(
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProductById(req, res);
 }));
 
