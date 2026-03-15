@@ -72,7 +72,7 @@ app.post(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS básico para permitir o frontend em localhost:4200
+// CORS
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:4200");
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
