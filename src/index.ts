@@ -1,5 +1,6 @@
 import "./config/env";
 import express, { Express } from "express";
+import cors from "cors";
 import userRoutes from "./routes/userRoutes";
 import addressRoutes from "./routes/addressRoutes";
 import swaggerUi from "swagger-ui-express";
@@ -13,7 +14,6 @@ import orderRoutes from "./routes/orderRoutes";
 import { defaultRateLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/authRoutes";
 import { ensureBucket } from "./config/minio";
-// Import models to establish relationships
 import "./models/index";
 import { ensureAdminExists } from "./config/ensureAdmin";
 import paymentRoutes from "./routes/paymentRoutes";
@@ -72,6 +72,19 @@ app.post(
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// CORS
+app.use(
+  cors({
+    origin: [
+      "http://localhost:4200",
+      "http://127.0.0.1:4200",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // Rate Limiting - aplicar globalmente
 app.use(defaultRateLimiter.middleware());
