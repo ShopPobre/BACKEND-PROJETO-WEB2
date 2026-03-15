@@ -144,7 +144,7 @@ router.post("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (r
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProducts(req, res);
 }));
 
@@ -167,8 +167,6 @@ router.post(
 );
 router.get(
     "/:id/images/:imageId/file",
-    ensureAuthenticated,
-    ensureRole("ADMIN", "USER"),
     asyncHandler(async (req: Request, res: Response) => {
         await productController.getProductImageFile(req, res);
     })
@@ -227,7 +225,7 @@ router.delete(
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProductById(req, res);
 }));
 
@@ -269,7 +267,7 @@ router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandle
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/category/:categoryId", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/category/:categoryId", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await productController.getProductsByCategory(req, res);
 }));
 
