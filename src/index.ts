@@ -144,8 +144,8 @@ const startServer = async () => {
 
         // Sincronizar modelos (apenas em desenvolvimento)
         if (process.env.NODE_ENV !== "production") {
-            await sequelize.sync({ alter: true });
-            console.log("✅ Modelos sincronizados com o banco de dados.");
+            await sequelize.sync();
+            console.log("✅ Modelos sincronizados com o banco de dados (sem ALTER).");
         }
 
         await ensureAdminExists();
