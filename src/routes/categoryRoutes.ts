@@ -115,7 +115,8 @@ router.post("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (r
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+// Listagem de categorias é pública (sem autenticação) para a Home e páginas de vitrine.
+router.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.getCategories(req, res);
 }));
 
@@ -162,7 +163,7 @@ router.get("/", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(a
  *             schema:
  *               $ref: '#/components/schemas/ValidationError'
  */
-router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+router.get("/:id", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await categoryController.getCategoryById(req, res);
 }));
 
