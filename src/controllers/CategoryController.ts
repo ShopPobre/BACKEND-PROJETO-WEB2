@@ -30,9 +30,10 @@ export class CategoryController {
             };
             return res.status(200).json(response);
         } catch (error: any) {
+            const statusCode = error.statusCode ?? 500;
             return res
-            .status(error.statusCode || 500)
-            .json({ message: "Erro ao buscar categorias", error: error.message });
+                .status(statusCode)
+                .json({ message: "Erro ao buscar categorias", error: error.message });
         }
     }
 
@@ -43,9 +44,10 @@ export class CategoryController {
             const response = CategoryMapper.toDTO(category);
             return res.status(200).json(response);
         } catch (error: any) {
+            const statusCode = error.statusCode ?? 500;
             return res
-            .status(500)
-            .json({ message: "Erro ao buscar categoria", error: error.message });
+                .status(statusCode)
+                .json({ message: "Erro ao buscar categoria", error: error.message });
         }
     }
 

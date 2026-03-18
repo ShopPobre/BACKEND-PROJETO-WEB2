@@ -18,12 +18,36 @@ import { ensureAdminExists } from "./config/ensureAdmin";
 import paymentRoutes from "./routes/paymentRoutes";
 import { PaymentService } from "./services/PaymentService";
 import { StripeGateway } from "./services/gateways/StripeGateway";
-
 import { PaymentRepository } from "./repository/PaymentRepository";
 import { OrderRepository } from "./repository/OrderRepository";
+import { CategoryRepository } from "./repository/CategoryRepository";
+import { CategoryService } from "./services/CategoryService";
+import { CategoryController } from "./controllers/CategoryController";
+import { asyncHandler } from "./middleware/errorHandler";
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
+
+/** CORS */
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.header("Access-Control-Allow-Origin", "http://localhost:4200");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+/** Config Stripe — responde GET /api/config com a chave publicável */
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method === "GET" && (req.path === "/api/config" || req.path === "/api/config/")) {
+    const stripePublishableKey = (process.env.STRIPE_PUBLISHABLE_KEY || "").trim();
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ stripePublishableKey });
+  }
+  next();
+});
 
 app.post(
   "/webhook/stripe",
@@ -72,17 +96,6 @@ app.post(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:4200");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  next();
-});
-
 // Rate Limiting - aplicar globalmente
 app.use(defaultRateLimiter.middleware());
 
@@ -121,6 +134,17 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     }
 }));
 
+// GET categorias e GET por id — rotas públicas
+const categoryRepository = new CategoryRepository();
+const categoryService = new CategoryService(categoryRepository);
+const categoryController = new CategoryController(categoryService);
+app.get("/api/categories", asyncHandler(async (req, res) => {
+  await categoryController.getCategories(req, res);
+}));
+app.get("/api/categories/:id", asyncHandler(async (req, res) => {
+  await categoryController.getCategoryById(req, res);
+}));
+
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/users/:userId/addresses", addressRoutes);
@@ -130,6 +154,14 @@ app.use("/api/inventory/:productId", inventoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/payments", paymentRoutes);
+
+app.use((req, res) => {
+  res.status(404).setHeader("Content-Type", "application/json").json({
+    error: "Not Found",
+    message: `Rota ${req.method} ${req.path} não encontrada`,
+    statusCode: 404,
+  });
+});
 // Error handler middleware (deve ser o último)
 app.use(errorHandler);
 
@@ -153,6 +185,7 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log(`🚀 Servidor rodando na porta ${PORT}`);
+            console.log(`✅ GET /api/config ativo (chave Stripe)`);
             console.log(`📍 Health check: http://localhost:${PORT}/health`);
             console.log(`📍 AUTH API: http://localhost:${PORT}/api/login`);
             console.log(`📍 Users API: http://localhost:${PORT}/api/users`);
@@ -161,6 +194,7 @@ const startServer = async () => {
             console.log(`📍 Products API: http://localhost:${PORT}/api/products`);
             console.log(`📍 Orders API: http://localhost:${PORT}/api/orders`);
             console.log(`📍 Payments API: http://localhost:${PORT}/api/payments`);
+            console.log(`📍 Config (Stripe): http://localhost:${PORT}/api/config`);
             console.log(`📍 Stripe Webhook: http://localhost:${PORT}/webhook/stripe`);
             console.log(`📚 Swagger Docs: http://localhost:${PORT}/api-docs`);
         });

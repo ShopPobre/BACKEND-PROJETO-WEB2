@@ -30,6 +30,15 @@ router.post(
 );
 
 router.get(
+  "/by-order/:orderId",
+  ensureAuthenticated,
+  ensureRole("USER"),
+  asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    await controller.getClientSecretByOrderId(req, res);
+  })
+);
+
+router.get(
   "/:id",
   ensureAuthenticated,
   ensureRole("USER", "ADMIN"),

@@ -101,7 +101,7 @@ router.post("/", ensureAuthenticated, ensureRole("USER"), asyncHandler(async (re
  * /api/orders/{id}:
  *   get:
  *     summary: Buscar pedido por ID
- *     description: Retorna os detalhes de um pedido específico pelo seu ID.
+ *     description: Retorna os dados básicos de um pedido específico pelo seu ID.
  *     tags: [Orders]
  *     parameters:
  *       - in: path
@@ -134,6 +134,46 @@ router.post("/", ensureAuthenticated, ensureRole("USER"), asyncHandler(async (re
  */
 router.get("/:id", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     await orderController.getOrderById(req, res);
+}));
+
+/**
+ * @swagger
+ * /api/orders/{id}/details:
+ *   get:
+ *     summary: Buscar detalhes completos de um pedido por ID
+ *     description: Retorna os detalhes completos de um pedido (usuário, endereço, itens e produtos) pelo seu ID.
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID do pedido
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Detalhes do pedido encontrados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OrderDetailResponseDTO'
+ *       404:
+ *         description: Pedido, usuário, endereço ou itens não encontrados
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotFoundError'
+ *       422:
+ *         description: ID inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationError'
+ */
+router.get("/:id/details", ensureAuthenticated, ensureRole("ADMIN", "USER"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    await orderController.getOrderDetailsById(req, res);
 }));
 
 /**

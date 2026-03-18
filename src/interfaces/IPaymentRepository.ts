@@ -7,6 +7,8 @@ export interface IPaymentRepository {
 
   findById(id: number): Promise<Payment | null>;
 
+  findByOrderId(orderId: number): Promise<Payment | null>;
+
   findByTransactionId(transactionId: string): Promise<Payment | null>;
 
   update(

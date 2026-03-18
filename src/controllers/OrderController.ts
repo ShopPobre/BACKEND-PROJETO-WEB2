@@ -50,6 +50,18 @@ export class OrderController {
         }
     }
 
+    async getOrderDetailsById(req: Request, res: Response) {
+        try {
+            const id = validateId(req.params.id);
+            const details = await this.orderService.getOrderDetailsById(id);
+            return res.status(200).json(details);
+        } catch (error: any) {
+            return res
+            .status(error.statusCode || 500)
+            .json({ message: "Erro ao buscar detalhes do pedido", error: error.message });
+        }
+    }
+
     async getOrdersByUserId(req: Request, res: Response) {
         try {
             const userId = validateID(req.params.userId);
