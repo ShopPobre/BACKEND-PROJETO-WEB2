@@ -96,6 +96,10 @@ router.post("/", ensureAuthenticated, ensureRole("USER"), asyncHandler(async (re
     await orderController.createOrder(req, res);
 }));
 
+router.get("/", ensureAuthenticated, ensureRole("ADMIN"), asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    await orderController.getOrders(req, res);
+}));
+
 /**
  * @swagger
  * /api/orders/{id}:
