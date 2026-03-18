@@ -71,4 +71,31 @@ export class PaymentService {
 
     return payment;
   }
+
+  /** Retorna clientSecret para um pedido PENDING do usuário (para recuperar na tela de checkout) */
+  async getClientSecretByOrderId(
+    orderId: number,
+    userId: string
+  ): Promise<{ clientSecret: string; orderTotal: number } | null> {
+    const order = await this.orderRepository.findById(orderId);
+    if (!order || order.userId !== userId) {
+      return null;
+    }
+    const payment = await this.paymentRepository.findByOrderId(orderId);
+    if (
+      !payment ||
+      payment.status !== "PENDING" ||
+      !payment.transactionId
+    ) {
+      return null;
+    }
+    const pi = await this.stripeGateway.retrievePaymentIntent(
+      payment.transactionId
+    );
+    if (!pi?.client_secret) return null;
+    return {
+      clientSecret: pi.client_secret,
+      orderTotal: Number(order.total),
+    };
+  }
 }

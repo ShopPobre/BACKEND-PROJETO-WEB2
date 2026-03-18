@@ -33,6 +33,15 @@ export class StripeGateway {
     });
   }
 
+  async retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent | null> {
+    try {
+      const pi = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+      return pi;
+    } catch {
+      return null;
+    }
+  }
+
   constructWebhookEvent(
     body: Buffer | string,
     signature: string,

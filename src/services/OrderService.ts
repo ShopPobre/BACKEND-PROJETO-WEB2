@@ -6,7 +6,7 @@ import { IUserRepository } from "../interfaces/IUserRepository";
 import { IAddressRepository } from "../interfaces/IAddressRepository";
 import { IProductRepository } from "../interfaces/IProductRepository";
 import { IInventoryRepository } from "../interfaces/IInventoryRepository";
-import { CreateOrderDTO, UpdateOrderDTO } from "../dto/OrderDTO";
+import { CreateOrderDTO, UpdateOrderDTO, OrderDetailResponseDTO, OrderItemDetailDTO } from "../dto/OrderDTO";
 import { NotFoundError, ValidationError, BadRequestError } from "../errors/AppError";
 import {
     createOrderSchema,
@@ -17,6 +17,9 @@ import {
 import { validateID } from "../schemas/userSchema";
 import { Product } from "../models/Product";
 import { Inventory } from "../models/Inventory";
+import { UserMapper } from "../mappers/UserMapper";
+import { AddressMapper } from "../mappers/AddressMapper";
+import { ProductMapper } from "../mappers/ProductMapper";
 import sequelize from "../config/database";
 
 export class OrderService {
@@ -137,6 +140,55 @@ export class OrderService {
         }
 
         return order;
+    }
+
+    async getOrderDetailsById(id: number): Promise<OrderDetailResponseDTO> {
+        const validatedId = validateId(id);
+        const order = await this.orderRepository.findById(validatedId);
+
+        if (!order) {
+            throw new NotFoundError('Pedido não encontrado');
+        }
+
+        const user = await this.userRepository.findByID(order.userId);
+        if (!user) {
+            throw new NotFoundError('Usuário do pedido não encontrado');
+        }
+
+        const address = await this.addressRepository.findByID(order.addressId);
+        if (!address) {
+            throw new NotFoundError('Endereço do pedido não encontrado');
+        }
+
+        const orderItems = await this.orderItemRepository.findByOrderId(order.id);
+
+        const items: OrderItemDetailDTO[] = [];
+
+        for (const item of orderItems) {
+            const product = await this.productRepository.findById(item.productId);
+            if (!product) {
+                throw new NotFoundError(`Produto com ID ${item.productId} não encontrado para o item do pedido`);
+            }
+
+            items.push({
+                id: item.id,
+                product: ProductMapper.toDTO(product),
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                subtotal: item.subtotal,
+            });
+        }
+
+        return {
+            id: order.id,
+            user: UserMapper.toDTO(user),
+            address: AddressMapper.toDTO(address),
+            items,
+            status: order.status,
+            total: order.total,
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
+        };
     }
 
     async getOrdersByUserId(userId: string, queryParams?: any) {

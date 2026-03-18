@@ -14,6 +14,13 @@ export class PaymentRepository implements IPaymentRepository {
     return this.paymentModel.findByPk(id);
   }
 
+  async findByOrderId(orderId: number): Promise<Payment | null> {
+    return this.paymentModel.findOne({
+      where: { orderId },
+      order: [["createdAt", "DESC"]],
+    });
+  }
+
   async findByTransactionId(transactionId: string): Promise<Payment | null> {
     return this.paymentModel.findOne({ where: { transactionId } });
   }
