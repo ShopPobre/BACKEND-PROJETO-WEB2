@@ -9,7 +9,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASS}
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - mysqldata:/var/lib/mysql
     networks:
@@ -19,7 +19,7 @@ services:
     image: minio/minio:latest
     container_name: shopobre-minio
     restart: always
-    command: server /data
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -38,6 +38,7 @@ services:
       - database
       - minio
     restart: always
+    profiles: ["backend"]
     environment:
       DB_DIALECT: mysql
       DB_HOST: database

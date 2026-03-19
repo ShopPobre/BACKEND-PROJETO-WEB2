@@ -7,6 +7,11 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "setup": "ts-node src/scripts/localBootstrap/setup.ts",
+    "minio:init": "ts-node src/scripts/localBootstrap/initMinio.ts",
+    "seed:local": "ts-node src/scripts/localBootstrap/seedProducts.ts",
+    "setup:reset": "ts-node src/scripts/localBootstrap/resetSeed.ts",
+    "setup:reset-all-seed": "ts-node src/scripts/localBootstrap/resetSeedAll.ts",
     "test": "mocha -r ts-node/register --file tests/setup.ts tests/**/*.ts",
     "test:unit": "mocha -r ts-node/register --file tests/setup.ts tests/unit/**/*.ts"
   },
