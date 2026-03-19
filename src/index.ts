@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 3000;
 /** CORS */
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header("Access-Control-Allow-Origin", "http://localhost:4200");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
