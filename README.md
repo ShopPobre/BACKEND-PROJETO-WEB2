@@ -1,5 +1,313 @@
 # BACKEND-PROJETO-WEB2
 
+## 0. Guia rapido de execucao
+
+### 0.1 O que sobe com Docker Compose
+
+Modo oficial de execucao (unico): `workspace/docker-compose.yml`
+
+- `database` (MySQL 8)
+- `minio` (armazenamento de arquivos)
+- `backend` (API Node.js/TypeScript)
+- `seed` (setup automatico de MinIO + categorias/produtos/imagens)
+- `frontend` (Angular) em `http://localhost:4200`
+
+### 0.1.1 Repositorios separados (frontend e backend)
+
+Os projetos estao em repositorios diferentes, clone os dois lado a lado em uma mesma pasta pai:
+
+```bash
+workspace/
+├── BACKEND-PROJETO-WEB2/
+└── FRONTEND-PROJETO-WEB2/
+```
+
+### 0.1.2 Variaveis de ambiente (.env) antes do compose
+
+Antes de executar o `docker compose`, configure o `.env` do backend:
+
+```bash
+test -f BACKEND-PROJETO-WEB2/.env || cp BACKEND-PROJETO-WEB2/.env.example BACKEND-PROJETO-WEB2/.env
+```
+
+Para o ambiente subir (API + banco + seed), o minimo recomendado no `.env` e:
+
+```env
+DB_USER=shopobre
+DB_PASS=root123
+DB_NAME=shopobre
+JWT_SECRET=troque_esta_chave_em_producao
+JWT_TOKEN_AUDIENCE=shopobre
+JWT_TOKEN_ISSUER=shopobre
+JWT_TTL=3600
+ADMIN_EMAIL=admin@admin.com
+ADMIN_PASSWORD=admin123
+```
+
+### 0.1.3 Stripe (antes de testar pagamentos)
+
+As chaves Stripe **nao sao necessarias para subir a stack**, mas sao obrigatorias para testar checkout/pagamento:
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+Depois de configurar o `.env`, crie o arquivo `docker-compose.yml` **na pasta pai** (`workspace/`) com o conteudo abaixo:
+
+```yaml
+services:
+  database:
+    image: mysql:8
+    container_name: shopobre-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-shopobre}
+      MYSQL_USER: ${DB_USER:-shopobre}
+      MYSQL_PASSWORD: ${DB_PASS:-root123}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$${MYSQL_USER} -p$${MYSQL_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks:
+      - shopobre-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: shopobre-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+    networks:
+      - shopobre-net
+
+  backend:
+    build:
+      context: ./BACKEND-PROJETO-WEB2
+      dockerfile: Dockerfile
+    container_name: shopobre-backend
+    restart: always
+    env_file:
+      - ./BACKEND-PROJETO-WEB2/.env
+    environment:
+      DB_DIALECT: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-shopobre}
+      DB_PASS: ${DB_PASS:-root123}
+      DB_NAME: ${DB_NAME:-shopobre}
+      JWT_SECRET: ${JWT_SECRET:-shopobre_dev_jwt_secret_change_me}
+      JWT_TOKEN_AUDIENCE: ${JWT_TOKEN_AUDIENCE:-shopobre}
+      JWT_TOKEN_ISSUER: ${JWT_TOKEN_ISSUER:-shopobre}
+      JWT_TTL: ${JWT_TTL:-3600}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-shopobre}
+      MINIO_USE_SSL: "false"
+      PORT: "3000"
+    depends_on:
+      database:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 40s
+    networks:
+      - shopobre-net
+
+  seed:
+    build:
+      context: ./BACKEND-PROJETO-WEB2
+      dockerfile: Dockerfile
+    container_name: shopobre-seed
+    env_file:
+      - ./BACKEND-PROJETO-WEB2/.env
+    environment:
+      DB_DIALECT: mysql
+      DB_HOST: database
+      DB_PORT: "3306"
+      DB_USER: ${DB_USER:-shopobre}
+      DB_PASS: ${DB_PASS:-root123}
+      DB_NAME: ${DB_NAME:-shopobre}
+      JWT_SECRET: ${JWT_SECRET:-shopobre_dev_jwt_secret_change_me}
+      JWT_TOKEN_AUDIENCE: ${JWT_TOKEN_AUDIENCE:-shopobre}
+      JWT_TOKEN_ISSUER: ${JWT_TOKEN_ISSUER:-shopobre}
+      JWT_TTL: ${JWT_TTL:-3600}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-shopobre}
+      MINIO_USE_SSL: "false"
+    command:
+      - sh
+      - -c
+      - |
+        for i in 1 2 3 4 5 6; do
+          npm run setup && exit 0
+          echo "Aguardando DB/MinIO para seed... tentativa $$i/6"
+          sleep 5
+        done
+        exit 1
+    depends_on:
+      database:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: on-failure:5
+    networks:
+      - shopobre-net
+
+  frontend:
+    build:
+      context: ./FRONTEND-PROJETO-WEB2/shopobre-ui
+      dockerfile: Dockerfile
+    container_name: shopobre-frontend
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    ports:
+      - "4200:4200"
+    networks:
+      - shopobre-net
+
+networks:
+  shopobre-net:
+
+volumes:
+  mysqldata:
+  miniodata:
+```
+
+### 0.2 Passo a passo completo (modo unico)
+
+1. Na pasta pai `workspace/` (onde esta o `docker-compose.yml`), garanta o `.env` do backend:
+
+```bash
+test -f BACKEND-PROJETO-WEB2/.env || cp BACKEND-PROJETO-WEB2/.env.example BACKEND-PROJETO-WEB2/.env
+```
+
+2. Ainda em `workspace/`, suba tudo:
+
+```bash
+docker compose up -d --build
+```
+
+3. Validacoes:
+
+```bash
+curl http://localhost:3000/health
+```
+
+- Frontend: `http://localhost:4200`
+- Backend: `http://localhost:3000`
+- Swagger: `http://localhost:3000/api-docs`
+- MinIO Console: `http://localhost:9001`
+- Config Stripe (chave publica): `http://localhost:3000/api/config`
+
+### 0.3 Stripe local (instalar, webhook e teste)
+
+1. Confirme que `STRIPE_SECRET_KEY` e `STRIPE_PUBLISHABLE_KEY` estao preenchidas no `BACKEND-PROJETO-WEB2/.env`.
+2. Instale a Stripe CLI: [https://docs.stripe.com/stripe-cli](https://docs.stripe.com/stripe-cli)
+3. Autentique:
+
+```bash
+stripe login
+```
+
+4. Com backend ativo, encaminhe os eventos para o webhook local:
+
+```bash
+stripe listen --forward-to localhost:3000/webhook/stripe
+```
+
+5. Copie o segredo `whsec_...` exibido no terminal e atualize `STRIPE_WEBHOOK_SECRET` no `.env`.
+6. Reinicie apenas o backend para aplicar:
+
+```bash
+docker compose restart backend
+```
+
+7. Fluxo esperado:
+   - API cria PaymentIntent em `/api/payments`
+   - Frontend confirma o pagamento com `clientSecret`
+   - Stripe envia `payment_intent.succeeded` para `/webhook/stripe`
+   - Backend confirma o pagamento e atualiza o pedido
+
+8. Ao tentar executar o projeto é esperado esse resultado:
+```> backend-projeto-web2@1.0.0 dev
+> ts-node-dev --respawn --transpile-only src/index.ts
+
+[INFO] 08:43:48 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.3)
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+✅ Conexão com banco de dados estabelecida com sucesso.
+✅ Modelos sincronizados com o banco de dados (sem ALTER).
+✅ Admin já existe.
+🚀 Servidor rodando na porta 3000
+✅ GET /api/config ativo (chave Stripe)
+📍 Health check: http://localhost:3000/health
+📍 AUTH API: http://localhost:3000/api/login
+📍 Users API: http://localhost:3000/api/users
+📍 Addresses API: http://localhost:3000/api/users/:userId/addresses
+📍 Categories API: http://localhost:3000/api/categories
+📍 Products API: http://localhost:3000/api/products
+📍 Orders API: http://localhost:3000/api/orders
+📍 Payments API: http://localhost:3000/api/payments
+📍 Config (Stripe): http://localhost:3000/api/config
+📍 Stripe Webhook: http://localhost:3000/webhook/stripe
+📚 Swagger Docs: http://localhost:3000/api-docs
+`` 
+
+### 0.4 Comandos uteis
+
+```bash
+# subir ambiente completo (na pasta workspace/)
+docker compose up -d --build
+
+# acompanhar logs da API
+docker compose logs -f backend
+
+# parar ambiente
+docker compose down
+```
+
+---
+
 ## 1. 🛒 **ShopPobre** - Sistema de E-commerce 🛒
 
 
@@ -242,117 +550,34 @@ O projeto atual implementa um backend RESTful completo com as seguintes funciona
 
 ### 4.1 Pré-requisitos
 
-- **Node.js** (versão 20 ou superior)
-- **npm** ou **yarn**
-- **MySQL** (versão 8 ou superior) ou **PostgreSQL**
-- **Docker** e **Docker Compose** (opcional, para usar containers)
+- **Docker** e **Docker Compose**
+- **Stripe CLI** (para confirmar pagamentos localmente por webhook)
+- Pasta pai `workspace/` contendo os dois repositorios:
+  - `BACKEND-PROJETO-WEB2`
+  - `FRONTEND-PROJETO-WEB2`
 
-### 4.2 Instalação e Configuração
+### 4.2 Instalação e Configuração (modo oficial)
 
-#### Opção 1: Execução Local (Sem Docker)
-
-1. **Clone o repositório:**
+1. **Na pasta `workspace/`, garanta o `.env` do backend:**
    ```bash
-   git clone https://github.com/ShopPobre/BACKEND-PROJETO-WEB2.git
-   cd BACKEND-PROJETO-WEB2
+   test -f BACKEND-PROJETO-WEB2/.env || cp BACKEND-PROJETO-WEB2/.env.example BACKEND-PROJETO-WEB2/.env
    ```
 
-2. **Instale as dependências:**
+2. **Suba a stack completa:**
    ```bash
-   npm install
+   docker compose up -d --build
    ```
 
-3. **Configure as variáveis de ambiente:**
-   
-   Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
-   ```env
-   # Banco de Dados
-   DB_DIALECT=mysql
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=seu_usuario
-   DB_PASS=sua_senha
-   DB_NAME=shopobre_db
-
-   # Servidor
-   PORT=3000
-   NODE_ENV=development
-   ```
-
-4. **Crie o banco de dados:**
-   
-   Acesse seu MySQL/PostgreSQL e crie o banco de dados:
-   ```sql
-   CREATE DATABASE shopobre_db;
-   ```
-
-5. **Compile o projeto TypeScript:**
+3. **Verifique os logs (se necessário):**
    ```bash
-   npm run build
+   docker compose logs -f backend
    ```
 
-6. **Inicie o servidor:**
-   
-   **Modo desenvolvimento (com hot-reload):**
-   ```bash
-   npm run dev
-   ```
-   
-   **Modo produção:**
-   ```bash
-   npm start
-   ```
-
-7. **Verifique se está funcionando:**
-   
-   Acesse no navegador ou via curl:
-   ```bash
-   curl http://localhost:3000/health
-   ```
-   
-   Você deve receber:
-   ```json
-   {
-     "status": "OK",
-     "message": "Server is running"
-   }
-   ```
-
-#### Opção 2: Execução com Docker Compose
-
-1. **Clone o repositório:**
-   ```bash
-   git clone https://github.com/ShopPobre/BACKEND-PROJETO-WEB2.git
-   cd BACKEND-PROJETO-WEB2
-   ```
-
-2. **Configure as variáveis de ambiente:**
-   
-   Crie um arquivo `.env` na raiz do projeto:
-   ```env
-   # Banco de Dados
-   DB_DIALECT=mysql
-   DB_PORT=3306
-   DB_USER=shopobre_user
-   DB_PASS=shopobre_password
-   DB_NAME=shopobre_db
-   ```
-
-3. **Inicie os containers:**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Verifique os logs:**
-   ```bash
-   docker-compose logs -f backend
-   ```
-
-5. **Acesse a aplicação:**
-   
+4. **Acesse a aplicação:**
    - API: `http://localhost:3000`
    - Health Check: `http://localhost:3000/health`
    - Swagger Docs: `http://localhost:3000/api-docs`
+   - Frontend: `http://localhost:4200`
 
 ### 4.3 Acessando a Documentação
 
