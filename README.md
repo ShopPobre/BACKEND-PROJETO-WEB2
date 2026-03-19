@@ -253,11 +253,38 @@ stripe login
 stripe listen --forward-to localhost:3000/webhook/stripe
 ```
 
+> Importante: o `whsec_...` so aparece quando voce executa o `stripe listen`.
+> Por isso, na primeira subida da stack, o webhook de confirmacao **nao funciona** ate voce copiar o `whsec_...` para o `.env` e reiniciar o backend.
+
 5. Copie o segredo `whsec_...` exibido no terminal e atualize `STRIPE_WEBHOOK_SECRET` no `.env`.
 6. Reinicie apenas o backend para aplicar:
 
 ```bash
 docker compose restart backend
+```
+
+#### Alternativa (modo dev no VSCode)
+
+Se preferir rodar o backend em modo desenvolvimento (hot-reload) fora do container:
+
+1. Pare o container do backend (libera a porta 3000):
+
+```bash
+docker compose stop backend
+```
+
+2. Rode o backend localmente:
+
+```bash
+cd BACKEND-PROJETO-WEB2
+npm install
+npm run dev
+```
+
+3. Com o backend local rodando em `http://localhost:3000`, execute o Stripe CLI normalmente:
+
+```bash
+stripe listen --forward-to localhost:3000/webhook/stripe
 ```
 
 7. Fluxo esperado:
