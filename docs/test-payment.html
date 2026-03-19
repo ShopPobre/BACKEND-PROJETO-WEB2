@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teste de pagamento - Stripe (ShopPobre)</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.25rem; }
+    label { display: block; margin-top: 1rem; font-weight: 600; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+    button { margin-top: 1rem; padding: 0.6rem 1rem; cursor: pointer; background: #5469d4; color: #fff; border: none; border-radius: 6px; font-size: 1rem; }
+    button:hover { background: #3d51b8; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #card-element { margin-top: 0.5rem; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; background: #fff; }
+    .message { margin-top: 1rem; padding: 0.75rem; border-radius: 6px; }
+    .message.success { background: #d4edda; color: #155724; }
+    .message.error { background: #f8d7da; color: #721c24; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Teste de pagamento (Stripe)</h1>
+  <p>Use esta página para simular o pagamento após obter o <code>clientSecret</code> do <code>POST /api/payments</code>.</p>
+
+  <div id="setup">
+    <label for="pk">Chave publicável Stripe (pk_test_...)</label>
+    <input type="text" id="pk" placeholder="pk_test_..." />
+
+    <label for="secret">Client Secret (pi_..._secret_...)</label>
+    <input type="password" id="secret" placeholder="pi_xxx_secret_xxx" />
+
+    <button type="button" id="btn-load">Carregar formulário de cartão</button>
+  </div>
+
+  <div id="payment-form" class="hidden">
+    <label>Cartão (Stripe Elements)</label>
+    <div id="card-element"></div>
+    <button type="button" id="btn-pay">Pagar com cartão de teste</button>
+    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
+      Cartão de teste: <strong>4242 4242 4242 4242</strong> · Validade: qualquer futura (ex. 12/34) · CVC: 123
+    </p>
+  </div>
+
+  <div id="message" class="message hidden"></div>
+
+  <script>
+    (function () {
+      var stripe = null;
+      var cardElement = null;
+      var clientSecret = null;
+
+      var setup = document.getElementById('setup');
+      var paymentForm = document.getElementById('payment-form');
+      var messageDiv = document.getElementById('message');
+      var pkInput = document.getElementById('pk');
+      var secretInput = document.getElementById('secret');
+      var btnLoad = document.getElementById('btn-load');
+      var btnPay = document.getElementById('btn-pay');
+
+      function showMessage(text, isError) {
+        messageDiv.textContent = text;
+        messageDiv.className = 'message ' + (isError ? 'error' : 'success');
+        messageDiv.classList.remove('hidden');
+      }
+
+      function hideMessage() {
+        messageDiv.classList.add('hidden');
+      }
+
+      btnLoad.addEventListener('click', function () {
+        var pk = (pkInput.value || '').trim();
+        var secret = (secretInput.value || '').trim();
+        if (!pk || !secret) {
+          showMessage('Preencha a chave publicável e o client secret.', true);
+          return;
+        }
+        if (!pk.startsWith('pk_')) {
+          showMessage('A chave publicável deve começar com pk_test_...', true);
+          return;
+        }
+        if (!secret.includes('_secret_')) {
+          showMessage('O client secret deve ser o valor retornado pelo POST /api/payments (pi_xxx_secret_xxx).', true);
+          return;
+        }
+        hideMessage();
+        try {
+          stripe = Stripe(pk);
+          var elements = stripe.elements();
+          cardElement = elements.create('card', {
+            style: { base: { fontSize: '16px' } }
+          });
+          cardElement.mount('#card-element');
+          clientSecret = secret;
+          setup.classList.add('hidden');
+          paymentForm.classList.remove('hidden');
+        } catch (e) {
+          showMessage('Erro ao carregar Stripe: ' + (e.message || e), true);
+        }
+      });
+
+      btnPay.addEventListener('click', function () {
+        if (!stripe || !cardElement || !clientSecret) {
+          showMessage('Carregue o formulário primeiro.', true);
+          return;
+        }
+        hideMessage();
+        btnPay.disabled = true;
+        stripe.confirmCardPayment(clientSecret, {
+          payment_method: { card: cardElement }
+        }).then(function (result) {
+          btnPay.disabled = false;
+          if (result.error) {
+            showMessage('Pagamento falhou: ' + (result.error.message || 'erro desconhecido'), true);
+            return;
+          }
+          showMessage('Pagamento confirmado! O webhook deve atualizar o pedido no backend. Consulte GET /api/orders/:id para ver status CONFIRMADO.', false);
+        }).catch(function (err) {
+          btnPay.disabled = false;
+          showMessage('Erro: ' + (err.message || err), true);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

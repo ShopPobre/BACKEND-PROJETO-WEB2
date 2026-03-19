@@ -1,0 +1,65 @@
+services:
+  database:
+    image: mysql:8
+    container_name: shopobre-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+      - shopobre-net
+
+  minio:
+    image: minio/minio:latest
+    container_name: shopobre-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    networks:
+      - shopobre-net
+
+  backend:
+    build: .
+    container_name: shopobre-backend
+    depends_on:
+      - database
+      - minio
+    restart: always
+    profiles: ["backend"]
+    environment:
+      DB_DIALECT: mysql
+      DB_HOST: database
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-shopobre}
+      MINIO_USE_SSL: "false"
+    ports:
+      - "3000:3000"
+    networks:
+      - shopobre-net
+
+networks:
+  shopobre-net:
+
+volumes:
+  mysqldata:
+  miniodata:
