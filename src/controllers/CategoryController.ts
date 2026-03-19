@@ -22,7 +22,10 @@ export class CategoryController {
 
     async getCategories(req: Request, res: Response) {
         try {
-            const queryParams = req.query;
+            const queryParams: any = { ...req.query };
+            if (queryParams.limit === undefined) {
+                queryParams.limit = 1000;
+            }
             const result = await this.categoryService.getCategories(queryParams);
             const response = {
                 data: CategoryMapper.toDTOArray(result.data),

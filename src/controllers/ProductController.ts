@@ -20,14 +20,17 @@ export class ProductController {
             return res.status(201).json(response);   
         } catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao cadastrar produto", error: error.message });
         }
     }
 
     async getProducts(req: Request, res: Response) {
         try {
-            const queryParams = req.query;
+            const queryParams: any = { ...req.query };
+            if (queryParams.limit === undefined) {
+                queryParams.limit = 1000;
+            }
             const result = await this.productService.getProducts(queryParams);
             const response = {
                 data: ProductMapper.toDTOArray(result.data),
@@ -50,7 +53,7 @@ export class ProductController {
             return res.status(200).json(response);
         } catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao buscar produto", error: error.message });
         }
     }
@@ -81,7 +84,7 @@ export class ProductController {
             return res.status(200).json(response);
         } catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao atualizar produto", error: error.message });
         }
     }
@@ -93,7 +96,7 @@ export class ProductController {
             return res.status(204).send();
         } catch (error: any) {
             return res
-            .status(500)
+            .status(error.statusCode || 500)
             .json({ message: "Erro ao deletar produto", error: error.message });
         }
     }

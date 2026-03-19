@@ -96,8 +96,10 @@ app.post(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate Limiting - aplicar globalmente
-app.use(defaultRateLimiter.middleware());
+// Rate Limiting - Liberado apenas em producao.
+if (process.env.NODE_ENV === "production") {
+  app.use(defaultRateLimiter.middleware());
+}
 
 /**
  * @swagger
